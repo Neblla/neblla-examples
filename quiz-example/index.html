@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preguntón · concursos en clase</title>
+  <meta name="description" content="Tus preguntas en la tele y todos contestan desde el móvil. Un concurso como Kahoot, hecho con Neblla.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap">
+  <link rel="stylesheet" href="main.css" />
+  <script src="https://neblla.com/connect/app.js"></script>
+</head>
+<body>
+
+  <header class="top">
+    <a class="logo" href="./" id="logo"><span class="logo-mark">?</span>Preguntón</a>
+    <div class="top-right">
+      <span id="whoChip" class="chip" hidden></span>
+      <button id="loginBtn" class="btn btn-small" type="button" hidden>Entrar</button>
+      <button id="logoutBtn" class="btn btn-small btn-ghost" type="button" hidden>Salir</button>
+    </div>
+  </header>
+
+  <main id="app">
+    <p id="connecting" class="center muted">Conectando…</p>
+
+    <!-- Portada: quien llega sin sala -->
+    <section id="vHome" class="view" hidden>
+      <p class="notice" id="exampleNotice">Esto es una app de ejemplo de <a href="https://neblla.com" target="_blank" rel="noopener">Neblla</a>: pruébala con tus amigos, no guarda nada importante.</p>
+
+      <div id="homeGuest">
+        <div class="hero">
+          <h1>Concursos en clase, en la tele y con los móviles</h1>
+          <p>Escribes tus preguntas, las pones en la pantalla grande y todos contestan desde su móvil. Gana quien acierta más y más rápido.</p>
+        </div>
+        <div class="cards two">
+          <div class="card">
+            <h2>¿Tienes un código?</h2>
+            <form id="codeForm" class="row">
+              <input id="codeInput" class="input code-input" placeholder="ABCDE" maxlength="12" autocomplete="off" autocapitalize="characters">
+              <button class="btn" type="submit">Entrar</button>
+            </form>
+            <p class="muted small">Te lo da quien dirige el concurso. No hace falta cuenta.</p>
+          </div>
+          <div class="card">
+            <h2>¿Diriges el concurso?</h2>
+            <button id="loginBig" class="btn btn-wide" type="button">Entrar para crear tus preguntas</button>
+            <button id="demoBtn" class="btn btn-ghost btn-wide" type="button">Probar sin cuenta con un concurso de ejemplo</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="homeTeacher" hidden>
+        <div class="list-head">
+          <h1>Tus cuestionarios</h1>
+          <button id="newQuizBtn" class="btn" type="button">＋ Nuevo cuestionario</button>
+        </div>
+        <div id="quizList" class="quiz-list"></div>
+        <div id="quizEmpty" class="card empty" hidden>
+          <h2>Aún no tienes cuestionarios</h2>
+          <p class="muted">Crea el primero, o empieza con uno de ejemplo y cámbialo a tu gusto.</p>
+          <div class="row">
+            <button id="firstQuizBtn" class="btn" type="button">Crear el primero</button>
+            <button id="copyDemoBtn" class="btn btn-ghost" type="button">Empezar con uno de ejemplo</button>
+          </div>
+        </div>
+        <form id="joinSmall" class="row join-small">
+          <input id="codeInput2" class="input code-input" placeholder="Código" maxlength="12" autocomplete="off" autocapitalize="characters">
+          <button class="btn btn-ghost" type="submit">Entrar a una sala</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- Editor de un cuestionario -->
+    <section id="vEditor" class="view" hidden>
+      <form id="editorForm">
+        <div class="list-head">
+          <h1 id="editorTitle">Nuevo cuestionario</h1>
+        </div>
+        <label class="field">
+          <span>Título</span>
+          <input id="quizTitle" class="input" maxlength="80" placeholder="Capitales del mundo" required>
+        </label>
+        <div id="questions"></div>
+        <button id="addQuestion" class="btn btn-ghost btn-wide" type="button">＋ Añadir pregunta</button>
+        <p id="editorError" class="error" hidden></p>
+        <div class="row sticky-actions">
+          <button id="cancelEdit" class="btn btn-ghost" type="button">Cancelar</button>
+          <button class="btn" type="submit">Guardar</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- Un dispositivo que entra en una sala -->
+    <section id="vJoin" class="view" hidden>
+      <div class="card join-card">
+        <p class="muted">Sala</p>
+        <p class="big-code" id="joinCode">·····</p>
+        <h2>¿Cómo te llamas?</h2>
+        <form id="nameForm" class="row">
+          <input id="nameInput" class="input" maxlength="24" placeholder="Tu nombre" autocomplete="nickname" required>
+          <button class="btn" type="submit">¡A jugar!</button>
+        </form>
+        <p class="muted small" id="screenHint">¿Es la pantalla de la clase (la tele, el proyector)? No escribas nada: quien dirige la elige desde su móvil.</p>
+      </div>
+    </section>
+
+    <!-- Quien dirige: los mandos -->
+    <section id="vMaster" class="view" hidden>
+      <div id="mLobby">
+        <div class="card share">
+          <div class="share-text">
+            <p class="muted">Código de la sala</p>
+            <p class="big-code" id="mCode">·····</p>
+            <p class="link-line" id="mLink"></p>
+            <div class="row">
+              <button id="shareBtn" class="btn" type="button">Compartir</button>
+              <button id="copyBtn" class="btn btn-ghost" type="button">Copiar enlace</button>
+            </div>
+          </div>
+          <img id="mQr" class="qr" alt="QR para entrar en la sala" width="150" height="150">
+        </div>
+        <div class="card" id="mDevicesCard">
+          <h2>Dispositivos en la sala</h2>
+          <p class="muted small" id="mDevicesHint">Abre el enlace en la tele o el proyector y elígela aquí como pantalla.</p>
+          <ul id="mDevices" class="devices"></ul>
+        </div>
+        <div class="card">
+          <h2>Jugadores <span id="mCount" class="pill">0</span></h2>
+          <div id="mPlayers" class="names"></div>
+        </div>
+        <button id="startBtn" class="btn btn-wide btn-big" type="button" disabled>Empezar</button>
+      </div>
+      <div id="mGame" hidden>
+        <p class="muted" id="mStep"></p>
+        <h2 id="mQuestion" class="m-question"></h2>
+        <div id="mInfo" class="m-info"></div>
+        <ol id="mOptions" class="m-options"></ol>
+        <button id="mAction" class="btn btn-wide btn-big" type="button"></button>
+        <details class="m-more">
+          <summary>Pantalla y dispositivos</summary>
+          <ul id="mDevices2" class="devices"></ul>
+        </details>
+      </div>
+    </section>
+
+    <!-- La tele -->
+    <section id="vBoard" class="view" hidden>
+      <div id="bLobby" class="b-lobby">
+        <div class="b-join">
+          <p class="b-kicker">Entra a jugar</p>
+          <p class="b-link" id="bLink"></p>
+          <p class="b-code-label">o con el código</p>
+          <p class="big-code huge" id="bCode">·····</p>
+        </div>
+        <img id="bQr" class="qr big" alt="QR para entrar" width="260" height="260">
+        <div class="b-names">
+          <p class="b-title" id="bTitle"></p>
+          <div id="bPlayers" class="names big"></div>
+          <p class="muted" id="bWaiting">Esperando jugadores…</p>
+        </div>
+      </div>
+      <div id="bGame" hidden>
+        <div class="b-head">
+          <span id="bStep" class="pill"></span>
+          <span id="bAnswered" class="b-answered"></span>
+          <span id="bClock" class="clock"></span>
+        </div>
+        <h1 id="bQuestion" class="b-question"></h1>
+        <ol id="bOptions" class="tiles"></ol>
+        <ol id="bRanking" class="ranking" hidden></ol>
+        <div id="bPodium" class="podium" hidden></div>
+      </div>
+    </section>
+
+    <!-- Un jugador -->
+    <section id="vPlayer" class="view" hidden>
+      <p class="me-line"><span id="pName"></span> <span id="pScore" class="pill"></span></p>
+      <div id="pWait" class="center">
+        <p class="p-big" id="pWaitText">¡Ya estás dentro!</p>
+        <p class="muted" id="pWaitSub">Mira la pantalla: el concurso empieza enseguida.</p>
+      </div>
+      <div id="pAsk" hidden>
+        <p class="p-question" id="pQuestion"></p>
+        <div id="pButtons" class="pad"></div>
+      </div>
+      <p class="leave-line"><button id="leaveBtn" class="link" type="button">Salir de la sala</button></p>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+  <script src="client.js"></script>
+</body>
+</html>
