@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>Bloques</title>
+  <meta name="description" content="Coloca las piezas en el tablero de 8×8, llena filas y columnas y bate tu récord. Cada día, un reto con las mismas piezas para todos." />
+  <link rel="stylesheet" href="main.css" />
+  <script src="https://neblla.com/connect/app.js"></script>
+</head>
+<body>
+  <main id="app">
+    <header class="top">
+      <h1 class="logo"><span class="logo-mark"></span>Bloques</h1>
+      <div class="who" id="who"></div>
+    </header>
+
+    <!-- Inicio -->
+    <section id="home" class="screen">
+      <div class="stats" id="stats"></div>
+      <button class="mode mode-reto" id="btnReto">
+        <span class="mode-title">Reto de hoy</span>
+        <span class="mode-sub" id="retoSub">Las mismas piezas para todos. Un solo intento.</span>
+      </button>
+      <button class="mode mode-libre" id="btnLibre">
+        <span class="mode-title">Partida libre</span>
+        <span class="mode-sub" id="libreSub">Piezas al azar, todas las veces que quieras.</span>
+      </button>
+      <div class="name-box hidden" id="nameBox">
+        <label for="nameInput">¿Cómo te llamamos en el ranking?</label>
+        <div class="row"><input id="nameInput" maxlength="24" placeholder="Tu nombre" /><button id="nameSave" class="small">Guardar</button></div>
+      </div>
+      <div class="board-title">Ranking de hoy <span class="seg"><button data-board="reto" class="on">Reto</button><button data-board="libre">Libre</button></span></div>
+      <ol class="ranking" id="ranking"><li class="muted">Cargando…</li></ol>
+      <p class="hint" id="homeHint"></p>
+    </section>
+
+    <!-- Partida -->
+    <section id="game" class="screen hidden">
+      <div class="hud">
+        <button class="back" id="btnQuit" aria-label="Salir">✕</button>
+        <div class="hud-mode" id="hudMode">Partida libre</div>
+        <div class="hud-score"><span id="score">0</span><small id="best"></small></div>
+      </div>
+      <div class="board-wrap"><div class="board" id="board"></div><div class="combo hidden" id="combo"></div></div>
+      <div class="tray" id="tray"></div>
+    </section>
+
+    <!-- Fin -->
+    <section id="end" class="screen hidden">
+      <div class="end-card">
+        <div class="end-title" id="endTitle">¡Fin de la partida!</div>
+        <div class="end-score" id="endScore">0</div>
+        <div class="end-lines" id="endLines"></div>
+        <div class="end-actions">
+          <button id="btnAgain" class="primary">Otra partida</button>
+          <button id="btnHome">Inicio</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <div class="ghost hidden" id="ghost"></div>
+  <script src="client.js"></script>
+</body>
+</html>
