@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Yoga Luz · ejemplo hecho con Neblla</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://neblla.com/connect/app/47ZMR"></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-in">
+      <div>
+        <h1>Yoga Luz</h1>
+        <p class="sub">Estudio de ejemplo · Calle de Fuencarral 45 · Madrid</p>
+      </div>
+      <div id="who" class="who"></div>
+    </div>
+  </header>
+
+  <main>
+    <p id="status" class="status" hidden></p>
+
+    <section id="tab-inicio" class="tab">
+      <div class="notice">
+        <b>Esto es una web de ejemplo</b>, hecha con <a href="https://neblla.com" target="_blank" rel="noopener">Neblla</a> para que veas cómo funciona una escuela de yoga de verdad. Entras como alumno: apúntate, reserva, escribe al profe y compra lo que quieras. Los pagos serán de prueba: con la tarjeta <b>4242 4242 4242 4242</b>, cualquier fecha futura y cualquier CVC, sin cobrar nada. <b>Todavía no están activos</b>: de momento puedes mirarlo todo, pero no comprar.
+      </div>
+      <img class="cover" src="https://images.unsplash.com/photo-1510894347713-fc3ed6fdf539?w=1400&q=75" alt="Una alumna medita sentada en la esterilla, en el estudio">
+      <h2>Quiénes somos</h2>
+      <p>Yoga Luz es un estudio pequeño en el centro de Madrid. Lo abrió Ana en 2019 con una idea sencilla: clases de grupos reducidos, de hasta 12 personas, donde el profe sabe tu nombre y te corrige la postura.</p>
+      <p>Somos dos profes, Ana y Marcos. Damos Hatha, tranquilo y para todos los niveles, y Vinyasa, más dinámico, de lunes a sábado. Si nunca has hecho yoga, empieza por Hatha: no hace falta ser flexible, solo venir con ropa cómoda.</p>
+      <h2>El estudio</h2>
+      <p class="hint">Así son nuestras salas y nuestras clases. Toca una foto para verla grande y saber qué es.</p>
+      <div id="gallery" class="gallery"></div>
+      <h2>Cómo funciona</h2>
+      <ul class="how">
+        <li><b>Apúntate a un horario</b> en «Horarios», por ejemplo los martes y jueves a las 18:00. Pagas cada mes y tu plaza está reservada en todas esas clases.</li>
+        <li><b>O ven cuando quieras</b> con un bono de 10 clases: en «Calendario» eliges cada clase suelta.</li>
+        <li><b>Clase privada</b>: una hora a solas con tu profe, el día que te venga bien.</li>
+        <li>Cada clase tiene su <b>chat</b> con los compañeros y el profe, y en <b>Mensajes</b> hablas a solas con el estudio.</li>
+      </ul>
+      <button class="btn" data-tab="horarios">Ver horarios</button>
+    </section>
+
+    <section id="tab-horarios" class="tab" hidden>
+      <h2>Horarios</h2>
+      <p class="hint">Así es nuestra semana, todas las semanas. Toca una clase: se marcan todos los días de ese horario (por ejemplo, martes y jueves a las 18:00). Te apuntas una vez, pagas cada mes y tu plaza está guardada en todas esas clases. En verde, los tuyos.</p>
+      <div id="timetable"></div>
+      <div id="offer" class="pick"></div>
+      <p class="hint">¿Prefieres venir cuando puedas? En «Calendario» reservas clases sueltas con el bono.</p>
+    </section>
+
+    <section id="tab-calendario" class="tab" hidden>
+      <h2>Calendario</h2>
+      <p class="hint">Las clases de cada día, con sus plazas. Reserva una clase suelta con tu bono.</p>
+      <div id="weeks" class="chips"></div>
+      <div id="calendar"></div>
+      <div class="legend"><span class="k k-mine"></span>De tu horario <span class="k k-bono"></span>Con tu bono <span class="k k-festivo"></span>Festivo</div>
+      <div id="calPick" class="pick"></div>
+      <div class="bono">
+        <div>
+          <div class="bono-n" id="balance">–</div>
+          <div class="bono-l">clases en tu bono</div>
+        </div>
+        <div class="bono-buy">
+          <small>Bono 10 clases · <span id="pBono">80 €</span></small>
+          <button id="buyBono" class="btn">Comprar bono</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="tab-mias" class="tab" hidden>
+      <h2>Mis clases</h2>
+      <div id="myPlans"></div>
+      <div id="mine" class="list"></div>
+    </section>
+
+    <section id="tab-privada" class="tab" hidden>
+      <h2>Clase privada</h2>
+      <p class="hint">Una hora a solas con el profe que elijas, en la sala pequeña. <b id="privPrice">35 €</b>, se paga al reservar. Mira las horas libres de todos a la vez (cada hueco se parte entre los profes libres) o elige un profe.</p>
+      <div id="staffPick" class="chips"></div>
+      <div id="privWeeks" class="chips"></div>
+      <div id="privCal"></div>
+      <div id="privLegend" class="legend"></div>
+      <div id="privPick" class="pick"></div>
+    </section>
+
+    <section id="tab-buzon" class="tab" hidden>
+      <h2>Mensajes con el estudio</h2>
+      <p class="hint">Solo entre tú y el estudio: tu profe te escribe aquí, y aquí te llega el recordatorio la víspera de cada clase. Lo que es para toda la clase va en el chat de cada clase («Mis clases»).</p>
+      <div id="msgs" class="msgs"></div>
+      <form id="send" class="send">
+        <textarea id="msg" rows="2" placeholder="¿Una duda? Escríbenos aquí"></textarea>
+        <button class="btn">Enviar</button>
+      </form>
+    </section>
+
+    <section id="tab-chat" class="tab" hidden>
+      <button id="chatBack" class="btn ghost small">← Mis clases</button>
+      <h2 id="chatTitle">Chat de la clase</h2>
+      <p class="hint">Solo lo ven quienes tienen plaza en esta clase y su profe.</p>
+      <div id="chatMsgs" class="msgs"></div>
+      <form id="chatSend" class="send">
+        <textarea id="chatMsg" rows="2" placeholder="«Ese día no podré ir…»"></textarea>
+        <button class="btn">Enviar</button>
+      </form>
+    </section>
+  </main>
+
+  <div id="lightbox" class="lightbox" hidden>
+    <figure>
+      <img id="lbImg" alt="">
+      <figcaption><b id="lbTitle"></b><span id="lbText"></span></figcaption>
+    </figure>
+  </div>
+
+  <nav class="tabs">
+    <button data-tab="inicio" class="on">Inicio</button>
+    <button data-tab="horarios">Horarios</button>
+    <button data-tab="calendario">Calendario</button>
+    <button data-tab="mias">Mis clases</button>
+    <button data-tab="privada">Privada</button>
+    <button data-tab="buzon">Mensajes</button>
+  </nav>
+  <script src="client.js"></script>
+</body>
+</html>
