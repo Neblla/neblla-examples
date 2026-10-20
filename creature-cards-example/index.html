@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Criaturas · cartas coleccionables</title>
+  <meta name="description" content="Abre sobres, completa tu colección de 30 criaturas, cambia cartas con tus amigos y reta a duelos con tu propio mazo.">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body>
+  <header class="top">
+    <div class="marca"><span class="logo">✦</span> Criaturas</div>
+    <div class="saldo" id="saldo" hidden>
+      <span title="Sobres">🎴 <b id="nSobres">0</b></span>
+      <span title="Monedas">🪙 <b id="nMonedas">0</b></span>
+    </div>
+    <button class="btn peq" id="entrar" hidden>Entrar</button>
+  </header>
+
+  <main>
+    <p class="aviso" id="aviso" hidden></p>
+
+    <!-- Sobres -->
+    <section id="vSobres" class="vista">
+      <div class="sobre-zona">
+        <button class="sobre" id="sobre" aria-label="Abrir un sobre">
+          <span class="sobre-brillo"></span>
+          <span class="sobre-titulo">Sobre de<br><b>Criaturas</b></span>
+          <span class="sobre-sub">5 cartas</span>
+        </button>
+        <div class="sobre-acciones">
+          <button class="btn grande" id="abrirGratis">Abrir gratis</button>
+          <button class="btn" id="abrirSobre">Abrir · 1 🎴</button>
+          <button class="btn" id="abrirMonedas">Abrir · 100 🪙</button>
+          <p class="nota" id="proximoGratis"></p>
+        </div>
+      </div>
+      <div class="reparto" id="reparto"></div>
+      <details class="probas">
+        <summary>Qué puede salir</summary>
+        <p class="nota">Cada sobre baraja las 939 cartas de nuevo y saca 5. Las cartas son tuyas antes de verlas.</p>
+        <div id="probas"></div>
+      </details>
+    </section>
+
+    <!-- Colección -->
+    <section id="vColeccion" class="vista" hidden>
+      <div class="cabecera">
+        <h2>Tu colección <small id="progreso"></small></h2>
+        <div class="filtros" id="filtros">
+          <button data-f="" class="on">Todas</button>
+          <button data-f="fuego">🔥</button><button data-f="agua">💧</button><button data-f="planta">🌿</button>
+        </div>
+      </div>
+      <div class="rejilla" id="rejilla"></div>
+      <h3>Tu mazo de duelo <small id="mazoCuenta"></small></h3>
+      <p class="nota">Toca una carta de tu colección para meterla o sacarla del mazo. Hacen falta 8.</p>
+      <div class="fila" id="mazo"></div>
+      <button class="btn peq" id="mazoAuto">Elegir las 8 más fuertes</button>
+    </section>
+
+    <!-- Duelo -->
+    <section id="vDuelo" class="vista" hidden>
+      <div id="dueloFuera">
+        <h2>Duelo</h2>
+        <p>Tu mazo de 8 contra el de otro jugador. Cada ronda uno ataca y el otro responde: gana la carta con más fuerza, y el elemento que vence suma 3 (🔥 vence a 🌿, 🌿 a 💧 y 💧 a 🔥). El primero en ganar 4 rondas, gana.</p>
+        <button class="btn grande" id="buscar">Buscar rival</button>
+        <p class="nota" id="dueloEstado"></p>
+      </div>
+      <div id="dueloDentro" hidden>
+        <div class="marcador">
+          <div><span id="yoNombre">Tú</span><b id="yoPuntos">0</b></div>
+          <div class="ronda" id="ronda">Ronda 1</div>
+          <div><span id="rivalNombre">Rival</span><b id="rivalPuntos">0</b></div>
+        </div>
+        <p class="rival-info" id="rivalInfo"></p>
+        <div class="mesa" id="mesa"></div>
+        <p class="turno" id="turno"></p>
+        <div class="fila mano" id="mano"></div>
+        <ol class="historial" id="historial"></ol>
+        <button class="btn" id="salir" hidden>Volver</button>
+      </div>
+    </section>
+
+    <!-- Amigos -->
+    <section id="vAmigos" class="vista" hidden>
+      <h2>Amigos</h2>
+      <div id="ofertas"></div>
+      <ul class="amigos" id="amigos"></ul>
+      <div id="deAmigo" hidden>
+        <h3 id="deAmigoTitulo"></h3>
+        <p class="nota">Elige una carta suya y una tuya para proponerle un cambio.</p>
+        <div class="rejilla peq" id="deAmigoRejilla"></div>
+        <h4>A cambio de una tuya</h4>
+        <div class="rejilla peq" id="miaRejilla"></div>
+        <button class="btn" id="proponer" disabled>Proponer el cambio</button>
+      </div>
+    </section>
+
+    <!-- Tienda -->
+    <section id="vTienda" class="vista" hidden>
+      <h2>Tienda</h2>
+      <p class="nota" id="pruebas" hidden></p>
+      <div class="productos" id="productos"></div>
+    </section>
+  </main>
+
+  <nav class="tabs" id="tabs">
+    <button data-v="vSobres" class="on">🎴<span>Sobres</span></button>
+    <button data-v="vColeccion">📖<span>Colección</span></button>
+    <button data-v="vDuelo">⚔️<span>Duelo</span></button>
+    <button data-v="vAmigos">👥<span>Amigos</span></button>
+    <button data-v="vTienda">🛒<span>Tienda</span></button>
+  </nav>
+
+  <div class="carta-grande" id="detalle" hidden></div>
+
+  <script src="creatures.js"></script>
+  <script src="client.js"></script>
+  <script src="https://neblla.com/connect/app.js"></script>
+</body>
+</html>
