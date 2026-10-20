@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tu plantilla · Plantillas Luna</title>
+  <meta name="robots" content="noindex">
+  <link rel="stylesheet" href="main.css">
+</head>
+<body class="tpl">
+  <main>
+    <p class="notice"><b>Así se abre lo que compraste.</b> En una tienda de verdad, este enlace te lleva a la plantilla en Canva, lista para editar. En este ejemplo no hay plantillas de Canva: te la enseñamos aquí.</p>
+    <h1 id="title">Tu plantilla</h1>
+    <img id="tplImg" class="tpl-img" alt="">
+    <ol class="how">
+      <li>Abre la plantilla y pulsa «Usar plantilla» (en Canva, gratis).</li>
+      <li>Cambia los textos, tu foto y, si quieres, los colores.</li>
+      <li>Descárgala en PDF o en PNG, y listo.</li>
+    </ol>
+    <p><a class="btn" href="./">Volver a la tienda</a></p>
+  </main>
+  <script>
+    const T = {
+      'cv-nordico': 'CV Nórdico', 'cv-minimal': 'CV Minimal', 'cv-creativo': 'CV Creativo',
+      'ig-cafeteria': '30 posts de Instagram para tu cafetería', 'ig-yoga': '30 posts de Instagram para tu estudio de yoga',
+    };
+    const id = new URLSearchParams(location.search).get('p');
+    if (T[id]) {
+      document.getElementById('title').textContent = T[id];
+      const img = document.getElementById('tplImg');
+      img.src = 'img/' + id + '.svg'; img.alt = 'La plantilla ' + T[id];
+    }
+  </script>
+</body>
+</html>

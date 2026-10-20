@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Plantillas Luna · ejemplo hecho con Neblla</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="https://neblla.com/connect/app/47ZSS"></script>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-in">
+      <div>
+        <h1>Plantillas Luna</h1>
+        <p class="sub">Plantillas de CV, redes y finanzas, diseñadas en Madrid por Luna Otero</p>
+      </div>
+      <div id="who" class="who"></div>
+    </div>
+  </header>
+
+  <main>
+    <p id="status" class="status" hidden></p>
+
+    <section id="tab-tienda" class="tab">
+      <div class="notice">
+        <b>Esto es una tienda de ejemplo</b>, hecha con <a href="https://neblla.com" target="_blank" rel="noopener">Neblla</a> para que veas cómo vende una diseñadora sus plantillas. Puedes comprar sin registrarte, solo con tu email. Los pagos son de prueba: con la tarjeta <b>4242 4242 4242 4242</b>, cualquier fecha futura y cualquier CVC, sin cobrar nada. <span id="paySoon"><b>Todavía no están activos</b>: de momento puedes mirarlo todo, pero no comprar.</span>
+      </div>
+
+      <div id="club" class="club"></div>
+
+      <h2>Currículums</h2>
+      <p class="hint">Se editan en Canva, gratis: cambias los textos, la foto y los colores, y lo descargas en PDF.</p>
+      <div id="cvs" class="grid"></div>
+
+      <h2>Redes sociales</h2>
+      <p class="hint">30 posts listos para tu negocio, con sus textos de ejemplo, para un mes entero.</p>
+      <div id="social" class="grid"></div>
+
+      <h2>Para tu negocio</h2>
+      <p class="hint">Hojas de cálculo que se rellenan solas: pones lo tuyo y te dicen cuánto te queda.</p>
+      <div id="business" class="grid"></div>
+    </section>
+
+    <section id="tab-mias" class="tab" hidden>
+      <h2>Mis compras</h2>
+      <div id="mine"></div>
+    </section>
+  </main>
+
+  <div id="lightbox" class="lightbox" hidden>
+    <figure>
+      <img id="lbImg" alt="">
+      <figcaption><b id="lbTitle"></b><span id="lbText"></span></figcaption>
+    </figure>
+  </div>
+
+  <nav class="tabs">
+    <button data-tab="tienda" class="on">Tienda</button>
+    <button data-tab="mias">Mis compras</button>
+  </nav>
+  <script src="client.js"></script>
+</body>
+</html>
