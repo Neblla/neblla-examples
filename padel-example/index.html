@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PistaLibre · reserva pista y juega partidas de tu nivel</title>
+  <meta name="description" content="Los clubes de pádel de Madrid en una app: reserva pista, apúntate a partidas abiertas de tu nivel, manda el resultado y sube en el ranking. Un ejemplo hecho con Neblla.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;800&family=Inter:wght@400;600;700&display=swap">
+  <link rel="stylesheet" href="main.css">
+  <script src="https://neblla.com/connect/app.js"></script>
+</head>
+<body>
+  <header class="top">
+    <div class="top-in">
+      <div class="logo"><span class="ball"></span>PistaLibre</div>
+      <div id="who" class="who"></div>
+    </div>
+  </header>
+
+  <main>
+    <p id="status" class="status" hidden></p>
+
+    <section id="tab-clubes" class="tab">
+      <div class="hero">
+        <h1>Juega al pádel con gente de tu nivel</h1>
+        <p>Los clubes de Madrid en una app. Reserva pista, apúntate a una partida abierta y sube en el ranking.</p>
+      </div>
+      <p class="notice">Esto es un ejemplo hecho con <a href="https://neblla.com" target="_blank" rel="noopener">Neblla</a>: los clubes y los jugadores son inventados. Entra, reserva y juega como si fuera de verdad. La pista se paga en el club; en la app no se cobra nada.</p>
+      <h2>Clubes</h2>
+      <div id="clubs" class="clubs"></div>
+      <div class="apply-cta">
+        <div><b>¿Tienes un club?</b><span>Date de alta y tus pistas saldrán aquí. Lo revisamos y te avisamos.</span></div>
+        <button class="btn ghost" data-tab="alta">Dar de alta mi club</button>
+      </div>
+    </section>
+
+    <section id="tab-club" class="tab" hidden>
+      <button id="clubBack" class="btn ghost small">← Clubes</button>
+      <div id="clubHead"></div>
+      <h2>Reserva pista</h2>
+      <p class="hint">Elige día y hora. Al reservar, abres una partida de 4: los demás jugadores de tu nivel la ven y se apuntan. La pista se paga en el club.</p>
+      <div id="days" class="days"></div>
+      <div id="hours" class="times"></div>
+      <div id="hourPick" class="pick"></div>
+      <h2>Lo que dicen los jugadores</h2>
+      <div id="reviews" class="list"></div>
+    </section>
+
+    <section id="tab-partidas" class="tab" hidden>
+      <h2>Partidas abiertas de tu nivel</h2>
+      <p class="hint" id="levelHint">Partidas que buscan jugadores. Solo ves las de tu nivel.</p>
+      <div id="open" class="list"></div>
+    </section>
+
+    <section id="tab-mias" class="tab" hidden>
+      <h2>Próximas</h2>
+      <div id="next" class="list"></div>
+      <h2>Jugadas</h2>
+      <p class="hint">Después de jugar, cada jugador dice quién ganó. Si todos coincidís, cuenta para el ranking.</p>
+      <div id="played" class="list"></div>
+    </section>
+
+    <section id="tab-ranking" class="tab" hidden>
+      <div id="me" class="mecard"></div>
+      <h2>Ranking</h2>
+      <div id="top" class="list"></div>
+    </section>
+
+    <section id="tab-tu" class="tab" hidden>
+      <div class="premium">
+        <div class="kicker">PistaLibre Premium</div>
+        <h2>Juega más, espera menos</h2>
+        <ul>
+          <li>Ves las partidas abiertas antes que nadie: sus primeras 12 horas son solo para Premium</li>
+          <li>Apoyas una app hecha para los jugadores</li>
+        </ul>
+        <div class="premium-buy"><b id="pPrice">4,99 € al mes</b><button id="buyPremium" class="btn light">Hazte Premium</button></div>
+        <small>Pagos de prueba: tarjeta 4242 4242 4242 4242, sin cobrar nada.</small>
+      </div>
+      <h2>Avisos</h2>
+      <p class="hint">El club te recuerda la partida la víspera y te escribe aquí.</p>
+      <div id="msgs" class="msgs"></div>
+    </section>
+
+    <section id="tab-alta" class="tab" hidden>
+      <button class="btn ghost small" data-tab="clubes">← Clubes</button>
+      <h2>Da de alta tu club</h2>
+      <p class="hint">Cuéntanos cómo es tu club. Lo revisamos y, si todo está bien, tu club sale en PistaLibre y tú gestionas sus pistas y reservas desde tu panel.</p>
+      <div id="myApps" class="list"></div>
+      <form id="apply" class="form">
+        <label>Nombre del club<input name="name" required maxlength="80" placeholder="Club Pádel Centro"></label>
+        <label>Dirección<input name="address" required maxlength="160" placeholder="Calle de Atocha 120, Madrid"></label>
+        <label>Teléfono<input name="phone" maxlength="30" placeholder="+34 600 000 000"></label>
+        <label>Cómo es<textarea name="about" rows="3" maxlength="500" placeholder="Cuatro pistas cubiertas, vestuarios y cafetería"></textarea></label>
+        <div id="applyFields"></div>
+        <button class="btn">Enviar solicitud</button>
+      </form>
+    </section>
+
+    <section id="tab-chat" class="tab" hidden>
+      <button id="chatBack" class="btn ghost small">← Mis partidas</button>
+      <h2 id="chatTitle">Chat de la partida</h2>
+      <p class="hint">Solo lo ven los jugadores de esta partida y el club.</p>
+      <div id="chatMsgs" class="msgs"></div>
+      <form id="chatSend" class="send">
+        <textarea id="chatMsg" rows="2" placeholder="«¿Quién trae bolas?»"></textarea>
+        <button class="btn">Enviar</button>
+      </form>
+    </section>
+  </main>
+
+  <nav class="tabs">
+    <button data-tab="clubes" class="on"><span>🏟</span>Clubes</button>
+    <button data-tab="partidas"><span>🎾</span>Partidas</button>
+    <button data-tab="mias"><span>📅</span>Mis partidas</button>
+    <button data-tab="ranking"><span>🏆</span>Ranking</button>
+    <button data-tab="tu"><span>⭐</span>Tú</button>
+  </nav>
+  <script src="client.js"></script>
+</body>
+</html>
