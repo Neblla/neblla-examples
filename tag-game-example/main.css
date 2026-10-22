@@ -1,0 +1,66 @@
+:root {
+  --ink: #1f2a1c;
+  --paper: #fffdf6;
+  --green: #3f7d3a;
+  --red: #ff4d4d;
+  --shadow: 0 10px 30px rgba(0, 0, 0, .25);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; overflow: hidden; background: #9fc7e8; color: var(--ink); }
+#game { position: fixed; inset: 0; }
+
+.hud {
+  position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px; pointer-events: none; z-index: 5;
+}
+.hud-box {
+  background: rgba(255, 253, 246, .9); border-radius: 12px; padding: 6px 12px; min-width: 88px;
+  display: flex; flex-direction: column; align-items: center; box-shadow: 0 2px 8px rgba(0, 0, 0, .15);
+}
+.hud-box.it { border-bottom: 4px solid var(--who, var(--red)); }
+.hud-label { white-space: nowrap; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+.hud-big { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+body.mine-it .hud-box.it { background: var(--red); color: #fff; }
+
+.shout {
+  position: fixed; top: 28%; left: 0; right: 0; margin: 0; text-align: center; z-index: 6;
+  font-size: clamp(22px, 5vw, 40px); font-weight: 800; color: #fff; pointer-events: none;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, .35), 0 0 18px rgba(0, 0, 0, .35);
+}
+
+.card-wrap {
+  position: fixed; inset: 0; display: grid; place-items: center; padding: 16px; z-index: 10;
+  background: rgba(20, 40, 20, .25);
+}
+.card {
+  background: var(--paper); border-radius: 18px; padding: 22px 24px; max-width: 460px; width: 100%;
+  box-shadow: var(--shadow);
+}
+.card h1, .card h2 { margin: 0 0 10px; color: var(--green); }
+.card p { line-height: 1.45; margin: 0 0 12px; }
+.keys { font-size: 14px; }
+kbd { background: #eee8d8; border-radius: 5px; padding: 1px 6px; font: 600 12px ui-monospace, monospace; }
+.best { font-weight: 600; }
+.muted { opacity: .7; }
+.small { font-size: 13px; }
+.btn {
+  display: block; width: 100%; border: 0; border-radius: 12px; padding: 14px; margin-top: 4px;
+  background: var(--green); color: #fff; font-size: 18px; font-weight: 700; cursor: pointer;
+}
+.btn:hover { filter: brightness(1.08); }
+.table { padding-left: 22px; margin: 0 0 14px; }
+.table li { padding: 3px 0; }
+.table li.me { font-weight: 700; }
+.failed {
+  position: fixed; bottom: 16px; left: 16px; right: 16px; margin: 0; padding: 12px; z-index: 20;
+  background: #fff1f0; border-radius: 10px; color: #a3261f; text-align: center;
+}
+[hidden] { display: none !important; }
+
+@media (max-width: 520px) {
+  .hud-box { min-width: 0; padding: 4px 8px; }
+  .hud-big { font-size: 16px; }
+  .hud-label { font-size: 9px; letter-spacing: .03em; }
+  .card { padding: 18px; }
+}
