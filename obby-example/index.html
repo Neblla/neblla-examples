@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Obby de los tejados de Madrid · un obby en 3D hecho con Neblla</title>
+  <meta name="description" content="Salta de tejado en tejado con tu muñeco de Neblla: plataformas que se mueven, pinchos, una sierra, un trampolín y lava abajo. Todo el recorrido es un JSON que lee Mundo, el motor 3D de Neblla.">
+  <link rel="stylesheet" href="main.css" />
+  <script src="https://neblla.com/connect/app.js"></script>
+</head>
+<body>
+  <div id="game"></div>
+
+  <header class="hud">
+    <div class="hud-box">
+      <span class="hud-label">Tiempo</span>
+      <span id="clock" class="hud-big">0,0 s</span>
+    </div>
+    <div class="hud-box">
+      <span class="hud-label">Monedas</span>
+      <span id="coins" class="hud-big">0</span>
+    </div>
+    <div class="hud-box">
+      <span class="hud-label">Control</span>
+      <span id="cp" class="hud-big">Salida</span>
+    </div>
+  </header>
+
+  <p id="shout" class="shout" hidden></p>
+
+  <section id="start" class="card-wrap">
+    <div class="card">
+      <h1>Obby de los tejados de Madrid</h1>
+      <p>Cruza los tejados hasta la bandera: plataformas que van y vienen, pinchos, un trampolín, una sierra que corta el puente y dos losas que aparecen y desaparecen. Abajo hay lava: si caes, vuelves al último punto de control.</p>
+      <p class="keys">Muévete con <kbd>WASD</kbd> o las flechas, corre con <kbd>Mayús</kbd> y salta con <kbd>espacio</kbd>. En el móvil, el joystick y el botón de saltar.</p>
+      <p class="muted small">Medallas: oro en 40 s, plata en 60 s y bronce en 90 s.</p>
+      <p id="best" class="best" hidden></p>
+      <p id="loading" class="muted">Preparando los tejados…</p>
+      <button id="playBtn" class="btn" type="button" hidden>Jugar</button>
+      <p id="dollHint" class="muted small" hidden>Juegas con el muñeco por defecto. Hazte el tuyo en <a href="https://creator.neblla.com/doll" target="_blank" rel="noopener">Neblla Creator</a> y saldrá aquí.</p>
+    </div>
+  </section>
+
+  <section id="end" class="card-wrap" hidden>
+    <div class="card">
+      <h2 id="endTitle">¡Meta!</h2>
+      <p id="endText"></p>
+      <button id="againBtn" class="btn" type="button">Otra vez</button>
+    </div>
+  </section>
+
+  <p id="failed" class="failed" hidden></p>
+
+  <script src="client.js"></script>
+</body>
+</html>
