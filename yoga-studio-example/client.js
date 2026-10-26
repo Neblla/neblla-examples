@@ -459,10 +459,11 @@ async function renderDoll() {
     const look = await neblla.avatar.get();
     if (!look.moves?.length) { text('Aún no tienes movimientos propios. Crea un saludo en Creator → Mundo → Animar y tu muñeco lo hará aquí.'); return; }
     $('dollView').hidden = false;
-    const world = await neblla.world.create({ container: '#dollView', sky: 'studio', camera: 'third' });
+    const world = await neblla.world.create({ container: '#dollView', sky: 'studio', camera: 'third', touch: false });
     const doll = await neblla.avatar.doll(world);
-    world.add({ doll, position: [0, 0, 0] });
-    world.camera.use('third', { target: [0, 0.9, 0], distance: 3.2, pitch: 0.1, transition: 0 });
+    world.add({ shape: 'box', size: [8, 1, 8], position: [0, -0.5, 0], color: '#dcdce4' });   // el suelo: el muñeco es un personaje y, sin suelo, cae
+    world.add({ doll, position: [0, 1, 0] });
+    world.camera.use('third', { target: [0, 0.9, 0], distance: 3.2, pitch: 0.1, height: 0, transition: 0 });
     const moves = doll.ownMoves || [];
     if (!moves.length) { $('dollView').hidden = true; text('Aún no tienes movimientos propios. Crea un saludo en Creator → Mundo → Animar y tu muñeco lo hará aquí.'); return; }
     dollPlay = (id) => doll.play(id);
