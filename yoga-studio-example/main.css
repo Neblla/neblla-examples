@@ -1,5 +1,11 @@
 :root { --bg: #f7f3ee; --card: #fff; --ink: #2f2a26; --soft: #7b716a; --accent: #6f8f72; --accent-ink: #fff; --warn: #b5683c; --line: #e8e0d7; }
 * { box-sizing: border-box; }
+.doll { display: flex; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px; margin-bottom: 12px; }
+.doll[hidden], .doll-view[hidden], .doll select[hidden] { display: none; }
+.doll-view { width: 140px; height: 180px; flex: none; border-radius: 10px; overflow: hidden; background: #f3ede6; }
+.doll-in { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; min-width: 0; }
+.doll-in span { color: var(--soft); font-size: 14px; }
+.doll select { font: inherit; padding: 6px 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--card); color: var(--ink); max-width: 100%; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; padding-bottom: 72px; }
 .hero { background: linear-gradient(180deg, rgba(30,25,20,.25), rgba(30,25,20,.6)), url(img/fondo.jpg) center 40% / cover; color: #fff; }
 .hero-in { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; padding: 64px 16px 18px; }

@@ -52,7 +52,7 @@ function show(tab) {
   for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === tab);
   for (const s of document.querySelectorAll('.tab')) s.hidden = s.id !== 'tab-' + tab;
   status('');
-  const render = { inicio: renderGallery, horarios: renderTimetable, calendario: renderCalendar, mias: renderMine, privada: renderPrivate, buzon: renderInbox }[tab];
+  const render = { inicio: renderGallery, horarios: renderTimetable, calendario: renderCalendar, mias: () => { renderDoll(); return renderMine(); }, privada: renderPrivate, buzon: renderInbox }[tab];
   if (render) render().catch?.((e) => status(errText(e), true));
   window.scrollTo(0, 0);
 }
@@ -443,6 +443,41 @@ async function renderMine() {
     box.append(row);
   }
   $('mine').replaceChildren(box);
+}
+
+// ── Tu muñeco: el de la cuenta de Neblla, haciendo sus movimientos de Mundo → Animar ──
+let dollOf = null, dollPlay = null;
+async function renderDoll() {
+  const box = $('doll');
+  if (!loggedIn()) { box.hidden = true; dollOf = null; dollPlay = null; return; }
+  box.hidden = false;
+  if (dollOf === neblla.auth.me.id) return;
+  dollOf = neblla.auth.me.id;
+  $('dollView').hidden = true; $('dollMoves').hidden = true; dollPlay = null;
+  const text = (t) => { $('dollText').textContent = t; };
+  try {
+    const look = await neblla.avatar.get();
+    if (!look.moves?.length) { text('Aún no tienes movimientos propios. Crea un saludo en Creator → Mundo → Animar y tu muñeco lo hará aquí.'); return; }
+    $('dollView').hidden = false;
+    const world = await neblla.world.create({ container: '#dollView', sky: 'studio', camera: 'third' });
+    const doll = await neblla.avatar.doll(world);
+    world.add({ doll, position: [0, 0, 0] });
+    world.camera.use('third', { target: [0, 0.9, 0], distance: 3.2, pitch: 0.1, transition: 0 });
+    const moves = doll.ownMoves || [];
+    if (!moves.length) { $('dollView').hidden = true; text('Aún no tienes movimientos propios. Crea un saludo en Creator → Mundo → Animar y tu muñeco lo hará aquí.'); return; }
+    dollPlay = (id) => doll.play(id);
+    dollPlay(moves[0].id);
+    text(moves.length > 1 ? 'Elige un movimiento:' : moves[0].name);
+    const sel = $('dollMoves');
+    sel.replaceChildren(...moves.map(m => { const o = el('option', '', m.name); o.value = m.id; return o; }));
+    sel.hidden = moves.length < 2;
+    sel.onchange = () => dollPlay?.(sel.value);
+  } catch (_) {
+    $('dollView').hidden = true;
+    text('');
+    box.hidden = true;
+    dollOf = null;
+  }
 }
 
 async function cancel(set, slot) {
