@@ -102,3 +102,10 @@ button.small { padding: 8px 12px; }
 
 .c1 { background: #ff6b8b; } .c2 { background: #ffcf3f; } .c3 { background: #4fc3ff; } .c4 { background: #7be08f; }
 .c5 { background: #b48cff; } .c6 { background: #ff9f4f; } .c7 { background: #4fe0d2; }
+
+/* Idioma: el tablero y las piezas no se espejan en rtl; el selector va discreto. */
+.board-wrap, .board, .tray, .piece, .ghost { direction: ltr; }
+.mode { text-align: start; }
+.hud-score { text-align: end; }
+.lang-box { display: flex; justify-content: center; margin-top: 14px; }
+.lang-box select { font: inherit; font-size: 13px; color: var(--muted); background: var(--bg2); border: 1px solid #343d77; border-radius: 10px; padding: 6px 10px; }

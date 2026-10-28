@@ -10,12 +10,18 @@
 //     entra en el ranking.
 // Neblla comprueba cada puntuación antes de que entre (límites del ranking).
 // El progreso (récord, racha del reto y partidas) va en neblla.db.
+//
+// Idioma: los textos están en lang/<código>.json. El HTML los pone con
+// data-i18n*; el código los pide con T() y se repinta con nebllaLang.on.
 
-window.onNeblla = (neblla) => {
+window.onNeblla = async (neblla) => {
+  await nebllaLang.ready;
   const N = 8;
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-  const fmt = (n) => Number(n || 0).toLocaleString('es-ES');
+  const T = (key, vars) => nebllaLang.t(key, vars);
+  const fmt = (n) => Number(n || 0).toLocaleString(nebllaLang.lang);
+  const days = (n) => T('day', { n });   // day_one / day_other / (ar) day_few…: según el idioma
   const today = () => new Date().toISOString().slice(0, 10);
   const yesterday = () => new Date(Date.now() - 86400000).toISOString().slice(0, 10);
 
@@ -75,6 +81,7 @@ window.onNeblla = (neblla) => {
   // ── La partida ───────────────────────────────────────────────────────────
   let G = null;          // { mode, board, tray, rng, score, lines, run, startedAt, over }
   let boardEls = [];
+  let comboLast = null;  // { n, pts } de la última combinación, para repintarla al cambiar de idioma
 
   function fits(board, piece, r, c) {
     return piece.cells.every(([dr, dc]) => {
@@ -115,9 +122,11 @@ window.onNeblla = (neblla) => {
     if (!G.tray.some((p) => p && fitsAnywhere(G.board, p))) setTimeout(() => endGame(), n ? 600 : 250);
     return true;
   }
+  function comboText() { return comboLast ? (comboLast.n > 1 ? T('combo_lines', { n: comboLast.n }) + ' ' : '') + '+' + fmt(comboLast.pts) : ''; }
   function showCombo(n, pts) {
     const el = $('combo');
-    el.textContent = (n > 1 ? `¡${n} líneas! ` : '') + '+' + fmt(pts);
+    comboLast = { n, pts };
+    el.textContent = comboText();
     el.classList.remove('hidden');
     el.style.animation = 'none'; void el.offsetWidth; el.style.animation = '';
     clearTimeout(showCombo.t);
@@ -226,7 +235,9 @@ window.onNeblla = (neblla) => {
   }
 
   // ── Pantallas ────────────────────────────────────────────────────────────
+  let screen = 'home';
   function show(id) {
+    screen = id;
     for (const s of ['home', 'game', 'end']) $(s).classList.toggle('hidden', s !== id);
   }
   const me = () => neblla.auth.me || {};
@@ -234,34 +245,51 @@ window.onNeblla = (neblla) => {
   let rankBoard = 'reto';
   let retoToday = null;   // tu puntuación de hoy en el reto, o null
 
-  async function renderHome() {
-    show('home');
+  // El título de la pestaña y la descripción siguen al idioma.
+  function renderMeta() {
+    document.title = T('app_name');
+    const m = document.querySelector('meta[name="description"]');
+    if (m) m.setAttribute('content', T('meta_desc'));
+    $('btnQuit').setAttribute('aria-label', T('quit_label'));
+  }
+
+  function renderStats() {
     const d = data();
     $('stats').innerHTML = [
-      ['Récord', fmt(d.record || 0)],
-      ['Racha', (d.lastReto === today() || d.lastReto === yesterday()) ? `${d.streak || 0} ${d.streak === 1 ? 'día' : 'días'}` : '0 días'],
-      ['Partidas', fmt(d.played || 0)],
-    ].map(([k, v]) => `<div class="stat"><b>${esc(v)}</b><span>${k}</span></div>`).join('');
+      [T('stat_record'), fmt(d.record || 0)],
+      [T('stat_streak'), (d.lastReto === today() || d.lastReto === yesterday()) ? days(d.streak || 0) : days(0)],
+      [T('stat_played'), fmt(d.played || 0)],
+    ].map(([k, v]) => `<div class="stat"><b>${esc(v)}</b><span>${esc(k)}</span></div>`).join('');
+  }
+  function renderHomeTexts() {
+    const logged = me().loggedIn;
+    $('libreSub').textContent = T(logged ? 'libre_sub_in' : 'libre_sub_guest');
+    if (!logged) $('retoSub').textContent = T('reto_sub_guest');
+    else if (retoToday !== null) $('retoSub').textContent = T('reto_sub_played', { score: fmt(retoToday) });
+    else $('retoSub').textContent = T('reto_sub_ready');
+    $('homeHint').textContent = logged ? '' : T('home_hint');
+  }
+
+  async function renderHome() {
+    show('home');
+    renderStats();
     renderWho();
     const logged = me().loggedIn;
     $('nameBox').classList.toggle('hidden', !logged || !!me().publicInfo?.name);
-    $('libreSub').textContent = logged ? 'Piezas al azar. La mejor entra en el ranking.' : 'Piezas al azar. Sin cuenta, sin ranking: entra para competir.';
     retoToday = null;
+    renderHomeTexts();
     if (logged) {
       try { const m = await neblla.scores.mine('reto'); retoToday = m && m.dayBest !== null && m.dayBest !== undefined ? m.dayBest : null; } catch (_) { /* sin red: se verá al jugar */ }
     }
-    const btn = $('btnReto');
-    if (!logged) { $('retoSub').textContent = 'Entra para jugar el reto: las mismas piezas para todos, un intento al día.'; btn.disabled = false; }
-    else if (retoToday !== null) { $('retoSub').textContent = `Ya lo has jugado hoy: ${fmt(retoToday)} puntos. Vuelve mañana.`; btn.disabled = true; }
-    else { $('retoSub').textContent = 'Las mismas piezas para todos. Un solo intento: se gasta al empezar.'; btn.disabled = false; }
-    $('homeHint').textContent = logged ? '' : 'Puedes jugar sin cuenta. Con cuenta guardas tu progreso en todos tus dispositivos y entras en el ranking.';
+    $('btnReto').disabled = logged && retoToday !== null;
+    renderHomeTexts();
     loadRanking();
   }
   function renderWho() {
     const m = me();
     $('who').innerHTML = m.loggedIn
-      ? `<span>${esc(m.publicInfo?.name || 'Tu cuenta')}</span><button id="btnOut">Salir</button>`
-      : `<button id="btnIn" class="primary">Entrar</button>`;
+      ? `<span>${esc(m.publicInfo?.name || T('who_account'))}</span><button id="btnOut">${esc(T('logout'))}</button>`
+      : `<button id="btnIn" class="primary">${esc(T('login'))}</button>`;
     if (m.loggedIn) $('btnOut').onclick = () => neblla.auth.logout();
     else $('btnIn').onclick = login;
   }
@@ -275,9 +303,9 @@ window.onNeblla = (neblla) => {
       const top = await neblla.scores.top(board, { period: 'day', limit: 10 });
       if (board !== rankBoard) return;
       ol.innerHTML = top.length
-        ? top.map((x) => `<li class="${x.me ? 'me' : ''}"><span class="pos">${x.place}</span><span class="nm">${esc(x.info?.name || 'Jugador')}</span><span class="pts">${fmt(x.value)}</span></li>`).join('')
-        : `<li class="muted">Nadie ha jugado aún hoy. ¡Sé el primero!</li>`;
-    } catch (_) { ol.innerHTML = `<li class="muted">No se pudo cargar el ranking.</li>`; }
+        ? top.map((x) => `<li class="${x.me ? 'me' : ''}"><span class="pos">${fmt(x.place)}</span><span class="nm">${esc(x.info?.name || T('player'))}</span><span class="pts">${fmt(x.value)}</span></li>`).join('')
+        : `<li class="muted">${esc(T('ranking_empty'))}</li>`;
+    } catch (_) { ol.innerHTML = `<li class="muted">${esc(T('ranking_error'))}</li>`; }
   }
   document.querySelectorAll('.seg button').forEach((b) => b.addEventListener('click', () => {
     rankBoard = b.dataset.board;
@@ -293,22 +321,32 @@ window.onNeblla = (neblla) => {
     renderWho();
   };
 
+  function renderHud() {
+    if (!G) return;
+    $('hudMode').textContent = G.mode === 'reto'
+      ? T('hud_reto', { date: new Date().toLocaleDateString(nebllaLang.lang, { day: 'numeric', month: 'long' }) })
+      : T('mode_libre');
+    $('best').textContent = data().record ? T('best', { n: fmt(data().record) }) : '';
+    $('score').textContent = fmt(G.score);
+    if (comboLast) $('combo').textContent = comboText();
+  }
+
   async function startGame(mode) {
     let run = null, seed = (Math.random() * 4294967296) >>> 0;
     if (mode === 'reto') {
       if (!me().loggedIn) { await login(); if (!me().loggedIn) return; }
       try { run = await neblla.scores.start('reto'); seed = run.seed; }
       catch (e) {
-        if (e && e.code === 'runs_per_day') { alert('Ya has jugado el reto de hoy. Vuelve mañana.'); renderHome(); return; }
-        alert('No se pudo empezar el reto. Prueba otra vez.'); return;
+        if (e && e.code === 'runs_per_day') { alert(T('alert_played')); renderHome(); return; }
+        alert(T('alert_start')); return;
       }
     } else if (me().loggedIn) {
       try { run = await neblla.scores.start('libre'); seed = run.seed; } catch (_) { run = null; }
     }
     G = { mode, board: Array.from({ length: N }, () => Array(N).fill(0)), rng: rngOf(seed), score: 0, lines: 0, run, over: false };
+    comboLast = null;
     refill();
-    $('hudMode').textContent = mode === 'reto' ? `Reto de hoy · ${new Date().toLocaleDateString('es-ES', { day: 'numeric', month: 'long' })}` : 'Partida libre';
-    $('best').textContent = data().record ? `récord ${fmt(data().record)}` : '';
+    renderHud();
     $('score').textContent = '0';
     show('game');
     buildBoard();
@@ -316,15 +354,24 @@ window.onNeblla = (neblla) => {
     renderTray();
   }
 
+  // La pantalla final: una lista de líneas que se escriben con T() al pintar,
+  // así cambian de idioma sin perder lo que ya se sabe.
+  let end = null;   // { mode, score, lines: [() => html], checking }
+  function renderEnd() {
+    if (!end) return;
+    $('endTitle').textContent = T(end.mode === 'reto' ? 'end_title_reto' : 'end_title_free');
+    $('endScore').textContent = fmt(end.score);
+    $('endLines').innerHTML = end.lines.map((f) => `<div class="end-line">${f()}</div>`).join('')
+      + (end.checking ? `<div class="end-line muted">${esc(T('checking'))}</div>` : '');
+  }
+
   async function endGame() {
     if (!G || G.over) return;
     G.over = true;
     const g = G;
     show('end');
-    $('endTitle').textContent = g.mode === 'reto' ? 'Reto de hoy terminado' : '¡Fin de la partida!';
-    $('endScore').textContent = fmt(g.score);
-    const lines = [];
-    const add = (html) => lines.push(`<div class="end-line">${html}</div>`);
+    end = { mode: g.mode, score: g.score, lines: [], checking: false };
+    const add = (f) => end.lines.push(f);
     // El progreso, en neblla.db (de invitado, en este dispositivo).
     const d = { ...data() };
     const record = g.score > (d.record || 0);
@@ -335,30 +382,32 @@ window.onNeblla = (neblla) => {
       d.lastReto = today();
     }
     neblla.db.save({ record: d.record, played: d.played, ...(g.mode === 'reto' ? { streak: d.streak, lastReto: d.lastReto } : {}) });
-    if (record && g.score > 0) add('🎉 <b>¡Nuevo récord!</b>');
-    if (g.mode === 'reto') add(`Racha: <b>${d.streak} ${d.streak === 1 ? 'día' : 'días'}</b> seguidos jugando el reto`);
-    $('endLines').innerHTML = lines.join('') + (g.run ? '<div class="end-line muted">Comprobando tu puntuación…</div>' : '');
+    if (record && g.score > 0) add(() => T('new_record'));
+    if (g.mode === 'reto') add(() => T('streak_line', { days: days(d.streak) }));
+    end.checking = !!g.run;
+    renderEnd();
     if (!g.run) {
-      if (!me().loggedIn) add('Entra con tu cuenta para que tus partidas cuenten en el ranking.');
-      $('endLines').innerHTML = lines.join('');
+      if (!me().loggedIn) add(() => esc(T('login_to_count')));
+      renderEnd();
       return;
     }
     const board = g.mode === 'reto' ? 'reto' : 'libre';
     try {
       const r = await neblla.scores.submit(g.run, g.score);
-      if (!r.ok) add('Esta puntuación no ha entrado en el ranking.');
+      if (!r.ok) add(() => esc(T('not_ranked')));
       else {
         const top = await neblla.scores.top(board, { period: 'day', limit: 100 });
         const mine = top.find((x) => x.me);
-        if (mine) add(`Eres el <b>${mine.place}.º</b> de hoy`);
+        if (mine) add(() => T('place_today', { n: fmt(mine.place) }));
         if ((me().grantedScopes || []).includes('friends')) {
           const fr = await neblla.scores.top(board, { period: 'day', friends: true, limit: 100 }).catch(() => []);
           const f = fr.find((x) => x.me);
-          if (f && fr.length > 1) add(`y el <b>${f.place}.º</b> entre tus amigos`);
+          if (f && fr.length > 1) add(() => T('place_friends', { n: fmt(f.place) }));
         }
       }
-    } catch (_) { add('No se pudo enviar la puntuación.'); }
-    $('endLines').innerHTML = lines.join('');
+    } catch (_) { add(() => esc(T('submit_error'))); }
+    end.checking = false;
+    renderEnd();
   }
 
   $('btnReto').onclick = () => startGame('reto');
@@ -367,12 +416,20 @@ window.onNeblla = (neblla) => {
   $('btnHome').onclick = () => renderHome();
   $('btnQuit').onclick = () => {
     if (!G || G.over) return renderHome();
-    const msg = G.mode === 'reto' ? '¿Terminar el reto? Tu intento de hoy cuenta con los puntos que llevas.' : '¿Terminar la partida?';
-    if (confirm(msg)) endGame();
+    if (confirm(T(G.mode === 'reto' ? 'confirm_reto' : 'confirm_free'))) endGame();
   };
+
+  // Al cambiar de idioma se repinta lo que el HTML no pinta solo.
+  nebllaLang.on(() => {
+    renderMeta();
+    if (screen === 'home') { renderStats(); renderWho(); renderHomeTexts(); loadRanking(); }
+    else if (screen === 'game') renderHud();
+    else renderEnd();
+  });
 
   neblla.auth.on('login', () => renderHome());
   neblla.auth.on('logout', () => renderHome());
+  renderMeta();
   renderHome();
   neblla.auth.login({ silent: true, scopes: ['friends'] }).catch(() => false);
 };

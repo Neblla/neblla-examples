@@ -7,11 +7,12 @@
   <meta name="description" content="Coloca las piezas en el tablero de 8×8, llena filas y columnas y bate tu récord. Cada día, un reto con las mismas piezas para todos." />
   <link rel="stylesheet" href="main.css" />
   <script src="https://neblla.com/connect/app.js"></script>
+  <script src="https://neblla.com/connect/lang.js"></script>
 </head>
 <body>
   <main id="app">
     <header class="top">
-      <h1 class="logo"><span class="logo-mark"></span>Bloques</h1>
+      <h1 class="logo"><span class="logo-mark"></span><span data-i18n="app_name">Bloques</span></h1>
       <div class="who" id="who"></div>
     </header>
 
@@ -19,27 +20,28 @@
     <section id="home" class="screen">
       <div class="stats" id="stats"></div>
       <button class="mode mode-reto" id="btnReto">
-        <span class="mode-title">Reto de hoy</span>
-        <span class="mode-sub" id="retoSub">Las mismas piezas para todos. Un solo intento.</span>
+        <span class="mode-title" data-i18n="mode_reto">Reto de hoy</span>
+        <span class="mode-sub" id="retoSub"></span>
       </button>
       <button class="mode mode-libre" id="btnLibre">
-        <span class="mode-title">Partida libre</span>
-        <span class="mode-sub" id="libreSub">Piezas al azar, todas las veces que quieras.</span>
+        <span class="mode-title" data-i18n="mode_libre">Partida libre</span>
+        <span class="mode-sub" id="libreSub"></span>
       </button>
       <div class="name-box hidden" id="nameBox">
-        <label for="nameInput">¿Cómo te llamamos en el ranking?</label>
-        <div class="row"><input id="nameInput" maxlength="24" placeholder="Tu nombre" /><button id="nameSave" class="small">Guardar</button></div>
+        <label for="nameInput" data-i18n="name_label">¿Cómo te llamamos en el ranking?</label>
+        <div class="row"><input id="nameInput" maxlength="24" data-i18n-placeholder="name_placeholder" placeholder="Tu nombre" /><button id="nameSave" class="small" data-i18n="save">Guardar</button></div>
       </div>
-      <div class="board-title">Ranking de hoy <span class="seg"><button data-board="reto" class="on">Reto</button><button data-board="libre">Libre</button></span></div>
-      <ol class="ranking" id="ranking"><li class="muted">Cargando…</li></ol>
+      <div class="board-title"><span data-i18n="board_title">Ranking de hoy</span> <span class="seg"><button data-board="reto" class="on" data-i18n="seg_reto">Reto</button><button data-board="libre" data-i18n="seg_libre">Libre</button></span></div>
+      <ol class="ranking" id="ranking"><li class="muted" data-i18n="loading">Cargando…</li></ol>
       <p class="hint" id="homeHint"></p>
+      <div class="lang-box" data-neblla-lang-switcher></div>
     </section>
 
     <!-- Partida -->
     <section id="game" class="screen hidden">
       <div class="hud">
-        <button class="back" id="btnQuit" aria-label="Salir">✕</button>
-        <div class="hud-mode" id="hudMode">Partida libre</div>
+        <button class="back" id="btnQuit" data-i18n-title="quit_label" title="Cerrar">✕</button>
+        <div class="hud-mode" id="hudMode"></div>
         <div class="hud-score"><span id="score">0</span><small id="best"></small></div>
       </div>
       <div class="board-wrap"><div class="board" id="board"></div><div class="combo hidden" id="combo"></div></div>
@@ -49,12 +51,12 @@
     <!-- Fin -->
     <section id="end" class="screen hidden">
       <div class="end-card">
-        <div class="end-title" id="endTitle">¡Fin de la partida!</div>
+        <div class="end-title" id="endTitle"></div>
         <div class="end-score" id="endScore">0</div>
         <div class="end-lines" id="endLines"></div>
         <div class="end-actions">
-          <button id="btnAgain" class="primary">Otra partida</button>
-          <button id="btnHome">Inicio</button>
+          <button id="btnAgain" class="primary" data-i18n="btn_again">Otra partida</button>
+          <button id="btnHome" data-i18n="btn_home">Inicio</button>
         </div>
       </div>
     </section>
