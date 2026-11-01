@@ -1,0 +1,4 @@
+{
+  "default": "es",
+  "on": ["es","en","fr","de","it","pt","ja","ko","zh","ar"]
+}
