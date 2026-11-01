@@ -9,6 +9,7 @@
 body { margin: 0; background: var(--fondo); color: var(--tinta); padding-bottom: 76px; }
 h2 { margin: .2em 0 .6em; font-size: 1.4rem; }
 h3 { margin: 1.4em 0 .4em; } h2 small, h3 small { color: var(--suave); font-weight: 500; font-size: .8em; }
+.idioma select { font: inherit; font-size: .85rem; border: 1px solid var(--linea); border-radius: 999px; background: var(--papel); color: var(--suave); padding: 4px 8px; max-width: 120px; }
 .top { position: sticky; top: 0; z-index: 5; display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: var(--papel); border-bottom: 1px solid var(--linea); }
 .marca { font-weight: 800; font-size: 1.15rem; flex: 1; } .logo { color: var(--acento); }
 .saldo { display: flex; gap: 12px; font-size: .95rem; }
@@ -49,8 +50,8 @@ main { max-width: 860px; margin: 0 auto; padding: 16px; }
 .carta .arte svg { width: 100%; height: 100%; display: block; }
 .carta .nombre { font-weight: 800; font-size: .92rem; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .carta .datos { display: flex; justify-content: space-between; font-size: .8rem; color: var(--suave); }
-.carta .fuerza { position: absolute; top: 2px; right: 4px; background: var(--tinta); color: #fff; border-radius: 999px; min-width: 26px; height: 26px; line-height: 26px; font-weight: 800; font-size: .85rem; }
-.carta .cuantas { position: absolute; top: 2px; left: 4px; background: #fff; border: 1px solid var(--linea); border-radius: 999px; padding: 0 7px; font-size: .78rem; font-weight: 700; }
+.carta .fuerza { position: absolute; top: 2px; inset-inline-end: 4px; background: var(--tinta); color: #fff; border-radius: 999px; min-width: 26px; height: 26px; line-height: 26px; font-weight: 800; font-size: .85rem; }
+.carta .cuantas { position: absolute; top: 2px; inset-inline-start: 4px; background: #fff; border: 1px solid var(--linea); border-radius: 999px; padding: 0 7px; font-size: .78rem; font-weight: 700; }
 .carta.falta { border-color: var(--linea); background: #efeae0; cursor: default; }
 .carta.falta .arte { background: #e9e3d8; } .carta.falta .nombre { color: var(--suave); }
 .carta.en-mazo { outline: 3px solid var(--ok); outline-offset: 2px; }
@@ -70,7 +71,7 @@ main { max-width: 860px; margin: 0 auto; padding: 16px; }
 .marcador div { display: flex; flex-direction: column; align-items: center; } .marcador b { font-size: 1.8rem; }
 .ronda { color: var(--suave); }
 .rival-info { text-align: center; color: var(--suave); font-size: .9rem; }
-.mesa { display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 200px; }
+.mesa { direction: ltr; display: flex; justify-content: center; align-items: center; gap: 20px; min-height: 200px; }
 .mesa .vs { font-weight: 800; color: var(--suave); }
 .hueco { width: 132px; height: 190px; border: 3px dashed var(--linea); border-radius: 12px; display: flex; align-items: center; justify-content: center; color: var(--suave); font-size: .85rem; text-align: center; padding: 8px; }
 .turno { text-align: center; font-weight: 800; font-size: 1.1rem; }

@@ -12,11 +12,24 @@
 //   - a duel is a room for two with an 8-card deck each, brought from the
 //     collection into a pile nobody else sees (tools.deck fromRows).
 
-window.onNeblla = (neblla) => {
+// Language: the texts are in lang/<code>.json. The HTML uses data-i18n*; this
+// file asks for them with T() and repaints on nebllaLang.on. The collection
+// saves each creature's stable id (`criatura`), never its name: the name
+// comes from the active language (c_<id>).
+window.onNeblla = async (neblla) => {
+  if (!window.nebllaLang) await new Promise(r => window.addEventListener('load', r));
+  await nebllaLang.ready;
   const { CRIATURAS, POR_ID, ELEMENTOS, RAREZAS, dibujo } = window.Criaturas;
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
   const MAZO = 8;
+  const T = (key, vars) => nebllaLang.t(key, vars);
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmt = (n, o) => new Intl.NumberFormat(nebllaLang.lang, o).format(n);
+  const iso = (s) => '⁨' + s + '⁩';   // a name inside a rtl sentence keeps its own direction
+  const nombre = (id) => T('c_' + id);
+  const rareza = (r) => T('rarity_' + r);
+  const elemento = (e) => T('element_' + e);
 
   let coleccion = [];          // my rows: { id, criatura, rareza, elemento, fuerza }
   let filtro = '';
@@ -29,11 +42,12 @@ window.onNeblla = (neblla) => {
   function carta(fila, { mini = false, cuantas = 0, falta = false, nueva = false } = {}) {
     const c = POR_ID[fila.criatura] || fila;
     const e = el('div', ['carta', c.rareza, c.elemento, mini && 'mini', falta && 'falta', nueva && 'nueva'].filter(Boolean).join(' '));
-    e.innerHTML = `<div class="arte">${dibujo(c, { silueta: falta })}</div>
+    const cid = fila.criatura || c.id;
+    e.innerHTML = `<div class="arte">${dibujo(c, { silueta: falta, etiqueta: esc(falta ? T('silhouette') : nombre(cid)) })}</div>
       ${falta ? '' : `<span class="fuerza">${c.fuerza}</span>`}
       ${cuantas > 1 ? `<span class="cuantas">×${cuantas}</span>` : ''}
-      <div class="nombre">${falta ? '???' : c.nombre}</div>
-      <div class="datos"><span>${ELEMENTOS[c.elemento].icono}</span><span>${falta ? '' : RAREZAS[c.rareza].nombre}</span></div>`;
+      <div class="nombre">${falta ? T('unknown_card') : esc(nombre(cid))}</div>
+      <div class="datos"><span>${ELEMENTOS[c.elemento].icono}</span><span>${falta ? '' : esc(rareza(c.rareza))}</span></div>`;
     return e;
   }
   function ampliar(fila) {
@@ -41,7 +55,7 @@ window.onNeblla = (neblla) => {
     d.innerHTML = '';
     const c = POR_ID[fila.criatura];
     const k = carta(fila);
-    k.insertAdjacentHTML('beforeend', `<p class="nota">${ELEMENTOS[c.elemento].nombre} · fuerza ${c.fuerza}</p>`);
+    k.insertAdjacentHTML('beforeend', `<p class="nota">${esc(T('strength_note', { element: elemento(c.elemento), n: c.fuerza }))}</p>`);
     d.append(k);
     d.hidden = false;
     d.onclick = () => { d.hidden = true; };
@@ -58,7 +72,7 @@ window.onNeblla = (neblla) => {
   document.querySelectorAll('#tabs button').forEach(b => b.onclick = () => ir(b.dataset.v));
 
   // ── Sign in ────────────────────────────────────────────────────────────
-  $('entrar').onclick = () => neblla.auth.login({ scopes: ['friends'] }).catch(e => avisar(e.code === 'popup_blocked' ? 'Tu navegador ha bloqueado la ventana de entrar.' : 'No se ha podido entrar.'));
+  $('entrar').onclick = () => neblla.auth.login({ scopes: ['friends'] }).catch(e => avisar(e.code === 'popup_blocked' ? T('err_popup') : T('err_login')));
   neblla.auth.on('login', () => arrancar());
   neblla.auth.on('logout', () => arrancar());
 
@@ -67,7 +81,7 @@ window.onNeblla = (neblla) => {
     $('saldo').hidden = !dentro();
     if (!dentro()) {
       coleccion = [];
-      avisar('Entra con tu cuenta para abrir sobres: te regalamos 3 para empezar.');
+      avisar(T('guest_hint'));
       pintarSobre();
       return;
     }
@@ -97,17 +111,17 @@ window.onNeblla = (neblla) => {
       $('probas').innerHTML = '';
       const porRareza = {};
       for (const c of info.cards) porRareza[c.data.rareza] = (porRareza[c.data.rareza] || 0) + c.chance;
-      for (const r of Object.keys(RAREZAS)) if (porRareza[r]) $('probas').append(el('div', 'proba', `<span>${RAREZAS[r].nombre}</span><b>${(porRareza[r] * 100).toFixed(1)} % por carta</b>`));
-      const leg = info.cards.filter(c => c.data.rareza === 'legendaria').map(c => POR_ID[c.data.criatura].nombre).join(', ');
-      $('probas').append(el('p', 'nota', `Las legendarias (${leg}) tienen 1 copia de ${info.cards.reduce((n, c) => n + c.copies, 0)} cada una.`));
+      for (const r of Object.keys(RAREZAS)) if (porRareza[r]) $('probas').append(el('div', 'proba', `<span>${esc(rareza(r))}</span><b>${esc(T('odds_row', { pct: fmt(porRareza[r] * 100, { minimumFractionDigits: 1, maximumFractionDigits: 1 }) }))}</b>`));
+      const leg = info.cards.filter(c => c.data.rareza === 'legendaria').map(c => nombre(c.data.criatura)).join(', ');
+      $('probas').append(el('p', 'nota', esc(T('legend_note', { names: leg, total: fmt(info.cards.reduce((n, c) => n + c.copies, 0)) }))));
     }
     const libre = info?.free;
     const saldo = dentro() ? await cargarSaldo() : { sobres: 0, monedas: 0 };
     $('abrirGratis').hidden = !(dentro() && libre?.available >= 1);
     $('abrirSobre').disabled = !dentro() || saldo.sobres < 1;
     $('abrirMonedas').disabled = !dentro() || saldo.monedas < 100;
-    $('proximoGratis').textContent = !dentro() ? '' : libre?.available >= 1 ? 'Tienes un sobre gratis.'
-      : libre?.nextAt ? `Próximo sobre gratis: ${new Date(libre.nextAt).toLocaleString('es', { weekday: 'long', hour: '2-digit', minute: '2-digit' })}.` : '';
+    $('proximoGratis').textContent = !dentro() ? '' : libre?.available >= 1 ? T('free_have')
+      : libre?.nextAt ? T('free_next', { when: new Date(libre.nextAt).toLocaleString(nebllaLang.lang, { weekday: 'long', hour: '2-digit', minute: '2-digit' }) }) : '';
   }
 
   async function abrir(pay) {
@@ -123,10 +137,10 @@ window.onNeblla = (neblla) => {
         $('reparto').append(k);
       });
       const top = r.cards.reduce((a, b) => RAREZAS[b.rareza].orden > RAREZAS[a.rareza].orden ? b : a);
-      if (RAREZAS[top.rareza].orden >= 2) avisar(`¡Una ${RAREZAS[top.rareza].nombre.toLowerCase()}! ${POR_ID[top.criatura].nombre} es tuyo.`);
+      if (RAREZAS[top.rareza].orden >= 2) avisar(T('rare_pull', { name: nombre(top.criatura), rarity: rareza(top.rareza) }));
       await cargarColeccion();
     } catch (e) {
-      avisar({ not_enough_credits: 'No te quedan sobres. Hay más en la tienda.', no_free_open: 'Tu sobre gratis aún no está listo.', too_many_rows: 'Tu colección está llena.' }[e.code] || 'No se ha podido abrir el sobre.');
+      avisar({ not_enough_credits: T('err_no_packs'), no_free_open: T('err_no_free'), too_many_rows: T('err_full') }[e.code] || T('err_open'));
     } finally {
       setTimeout(() => $('sobre').classList.remove('abriendo'), 500);
       pintarSobre();
@@ -141,7 +155,7 @@ window.onNeblla = (neblla) => {
   const cuantasDe = () => { const n = {}; for (const f of coleccion) n[f.criatura] = (n[f.criatura] || 0) + 1; return n; };
   function pintarColeccion() {
     const n = cuantasDe();
-    $('progreso').textContent = `${Object.keys(n).length} de ${CRIATURAS.length}`;
+    $('progreso').textContent = T('of', { n: Object.keys(n).length, total: CRIATURAS.length });
     $('rejilla').innerHTML = '';
     for (const c of CRIATURAS) {
       if (filtro && c.elemento !== filtro) continue;
@@ -166,14 +180,14 @@ window.onNeblla = (neblla) => {
       k.onclick = () => { mazo = mazo.filter(x => x !== id); guardarMazo(); };
       $('mazo').append(k);
     }
-    $('mazoCuenta').textContent = `${mazo.length} de ${MAZO}`;
+    $('mazoCuenta').textContent = T('of', { n: mazo.length, total: MAZO });
   }
   function alternarMazo(filas) {
     const dentroMazo = filas.filter(f => mazo.includes(f.id));
     const fuera = filas.find(f => !mazo.includes(f.id));
     if (fuera && mazo.length < MAZO) mazo.push(fuera.id);
     else if (dentroMazo.length) mazo = mazo.filter(x => x !== dentroMazo[dentroMazo.length - 1].id);
-    else return avisar(`Tu mazo ya tiene ${MAZO} cartas: quita una antes.`);
+    else return avisar(T('deck_full'));
     guardarMazo();
   }
   function guardarMazo() {
@@ -194,11 +208,11 @@ window.onNeblla = (neblla) => {
   // ── Duel ───────────────────────────────────────────────────────────────
   $('buscar').onclick = async () => {
     if (!dentro()) return neblla.auth.login({ scopes: ['friends'] });
-    if (mazo.length !== MAZO) { ir('vColeccion'); return avisar(`Elige antes las ${MAZO} cartas de tu mazo.`); }
-    $('dueloEstado').textContent = 'Buscando rival…';
+    if (mazo.length !== MAZO) { ir('vColeccion'); return avisar(T('need_deck')); }
+    $('dueloEstado').textContent = T('searching');
     $('buscar').disabled = true;
     try { await neblla.rooms.play({ config: { modo: 'duelo' } }); }
-    catch (e) { $('dueloEstado').textContent = e.code === 'login_required' ? 'Entra con tu cuenta para jugar.' : 'No se ha podido buscar partida.'; $('buscar').disabled = false; }
+    catch (e) { $('dueloEstado').textContent = e.code === 'login_required' ? T('search_login') : T('search_fail'); $('buscar').disabled = false; }
   };
   neblla.room.on('joined', ({ isLobby }) => {
     enDuelo = !isLobby;
@@ -207,7 +221,7 @@ window.onNeblla = (neblla) => {
     $('buscar').disabled = false;
     if (enDuelo) { ir('vDuelo'); $('dueloEstado').textContent = ''; pintarDuelo(neblla.state.get()); }
   });
-  neblla.room.on('userJoined', () => { if (enDuelo && !neblla.state.get()) $('turno').textContent = 'Esperando a tu rival…'; });
+  neblla.room.on('userJoined', () => { if (enDuelo && !neblla.state.get()) $('turno').textContent = T('waiting_rival'); });
 
   let traido = false;
   async function traerMazo() {
@@ -219,45 +233,45 @@ window.onNeblla = (neblla) => {
     } catch (e) {
       traido = e.code === 'already_brought';
       if (traido) neblla.message.to('server', { type: 'traido' });
-      else avisar('Tu mazo no ha valido: ' + e.code);
+      else avisar(T('deck_invalid', { code: e.code }));
     }
   }
 
   neblla.state.on(pintarDuelo);
   neblla.tools.on('event', (e) => { if (e.name === 'duelo' && (e.op === 'dealt' || e.op === 'play')) pintarMano(); });
-  neblla.message.on(({ from, data }) => { if (from === 'server' && data?.type === 'rechazado') avisar('El árbitro no ha aceptado tu mazo.'); });
+  neblla.message.on(({ from, data }) => { if (from === 'server' && data?.type === 'rechazado') avisar(T('referee_rejected')); });
 
-  const nombreDe = (id) => neblla.room.users.find(u => u.id === id)?.publicInfo?.name || 'Rival';
+  const nombreDe = (id) => neblla.room.users.find(u => u.id === id)?.publicInfo?.name || T('opponent');
   let ultimo = null;
   async function pintarDuelo(s) {
     if (!enDuelo || !s || !s.jugadores) return;
     ultimo = s;
     const yo = neblla.room.me?.id, rival = s.jugadores.find(j => j !== yo);
-    $('yoNombre').textContent = 'Tú'; $('rivalNombre').textContent = nombreDe(rival);
+    $('yoNombre').textContent = T('you'); $('rivalNombre').textContent = nombreDe(rival);
     $('yoPuntos').textContent = s.puntos[yo] || 0; $('rivalPuntos').textContent = s.puntos[rival] || 0;
-    $('ronda').textContent = s.fase === 'fin' ? 'Fin' : `Ronda ${s.ronda}`;
+    $('ronda').textContent = s.fase === 'fin' ? T('end_label') : T('round', { n: s.ronda });
     if (s.fase === 'mazos' && s.creada && !s.listos.includes(yo)) traerMazo();
     const mesa = $('mesa');
     mesa.innerHTML = '';
     const ultima = s.historial[s.historial.length - 1];
     const enMesa = s.mesa.ataque ? [s.mesa.ataque, s.mesa.defensa] : (ultima ? [ultima.ataque, ultima.defensa] : [null, null]);
     enMesa.forEach((c, i) => {
-      if (i === 1) mesa.append(el('span', 'vs', 'contra'));
-      mesa.append(c ? carta(c) : el('div', 'hueco', i === 0 ? 'Ataque' : 'Respuesta'));
+      if (i === 1) mesa.append(el('span', 'vs', esc(T('vs'))));
+      mesa.append(c ? carta(c) : el('div', 'hueco', esc(i === 0 ? T('slot_attack') : T('slot_answer'))));
     });
     $('historial').innerHTML = '';
     for (const h of s.historial) {
-      const quien = h.gana ? (h.gana === yo ? 'tú' : nombreDe(h.gana)) : 'nadie';
-      $('historial').append(el('li', '', `${POR_ID[h.ataque.criatura].nombre} (${h.ataque.valor}) contra ${POR_ID[h.defensa.criatura].nombre} (${h.defensa.valor}): gana ${quien}`));
+      const v = { a: nombre(h.ataque.criatura), av: h.ataque.valor, d: nombre(h.defensa.criatura), dv: h.defensa.valor, who: h.gana && h.gana !== yo ? iso(nombreDe(h.gana)) : '' };
+      $('historial').append(el('li', '', esc(T(!h.gana ? 'hist_tie' : h.gana === yo ? 'hist_you' : 'hist_them', v))));
     }
-    $('turno').textContent = s.fase === 'mazos' ? 'Barajando los mazos…'
-      : s.fase === 'fin' ? (s.ganador === 'empate' ? 'Empate' : s.ganador === yo ? (s.abandono ? 'Tu rival se ha ido: ganas tú' : '¡Has ganado el duelo!') : 'Has perdido el duelo')
-      : s.turno === yo ? (s.mesa.ataque ? 'Te toca responder' : 'Te toca atacar') : `Juega ${nombreDe(rival)}…`;
+    $('turno').textContent = s.fase === 'mazos' ? T('shuffling')
+      : s.fase === 'fin' ? (s.ganador === 'empate' ? T('draw') : s.ganador === yo ? (s.abandono ? T('won_abandon') : T('won')) : T('lost'))
+      : s.turno === yo ? (s.mesa.ataque ? T('turn_respond') : T('turn_attack')) : T('turn_other', { name: iso(nombreDe(rival)) });
     $('salir').hidden = s.fase !== 'fin';
     if (s.fase === 'fin' && s.ganador) neblla.anticheat.confirm('ganador', s.ganador);
     await pintarMano();
     const cuentas = await neblla.tools.deck.counts('duelo').catch(() => null);
-    if (cuentas && cuentas[rival]) $('rivalInfo').textContent = `${nombreDe(rival)}: ${cuentas[rival].hand} en la mano, ${cuentas[rival].pile} en el mazo`;
+    if (cuentas && cuentas[rival]) $('rivalInfo').textContent = T('rival_info', { name: iso(nombreDe(rival)), hand: cuentas[rival].hand, pile: cuentas[rival].pile });
   }
   async function pintarMano() {
     if (!enDuelo || !ultimo || ultimo.fase === 'mazos') return;
@@ -270,7 +284,7 @@ window.onNeblla = (neblla) => {
       if (!miTurno) k.classList.add('apagada');
       else k.onclick = async () => {
         $('mano').querySelectorAll('.carta').forEach(x => x.classList.add('apagada'));
-        try { await neblla.tools.deck.play('duelo', c.id); } catch (e) { avisar('No se ha podido jugar: ' + e.code); }
+        try { await neblla.tools.deck.play('duelo', c.id); } catch (e) { avisar(T('play_fail', { code: e.code })); }
       };
       $('mano').append(k);
     }
@@ -280,13 +294,13 @@ window.onNeblla = (neblla) => {
   // ── Friends and trades ─────────────────────────────────────────────────
   let amigo = null, suya = null, mia = null;
   async function pintarAmigos() {
-    if (!dentro()) { $('amigos').innerHTML = '<li>Entra para ver a tus amigos.</li>'; return; }
+    if (!dentro()) { $('amigos').innerHTML = `<li>${esc(T('friends_login'))}</li>`; return; }
     await neblla.social.list().catch(() => {});
     $('amigos').innerHTML = '';
-    if (!neblla.social.friends.length) $('amigos').innerHTML = '<li>Aún no tienes amigos en Criaturas. Invita a alguien desde tu cuenta de Neblla.</li>';
+    if (!neblla.social.friends.length) $('amigos').innerHTML = `<li>${esc(T('friends_none'))}</li>`;
     for (const f of neblla.social.friends) {
-      const li = el('li', '', `<span>${f.online ? '🟢' : '⚪'} ${f.name}</span>`);
-      const b = el('button', 'btn peq', 'Ver su colección');
+      const li = el('li', '', `<span>${f.online ? '🟢' : '⚪'} ${esc(f.name)}</span>`);
+      const b = el('button', 'btn peq', esc(T('view_collection')));
       b.onclick = () => verAmigo(f);
       li.append(b);
       $('amigos').append(li);
@@ -296,11 +310,11 @@ window.onNeblla = (neblla) => {
   async function verAmigo(f) {
     amigo = f; suya = null; mia = null;
     $('deAmigo').hidden = false;
-    $('deAmigoTitulo').textContent = `La colección de ${f.name}`;
-    $('deAmigoRejilla').innerHTML = '<p class="nota">Cargando…</p>';
+    $('deAmigoTitulo').textContent = T('friend_collection', { name: iso(f.name) });
+    $('deAmigoRejilla').innerHTML = `<p class="nota">${esc(T('loading'))}</p>`;
     let filas = [];
     try { filas = await neblla.db.loadOf(f, { table: 'coleccion', limit: 500 }); }
-    catch (e) { $('deAmigoRejilla').innerHTML = `<p class="nota">${e.code === 'not_friends' ? 'Tu amigo aún no ha dado permiso de amigos a Criaturas.' : 'No se ha podido ver.'}</p>`; return; }
+    catch (e) { $('deAmigoRejilla').innerHTML = `<p class="nota">${esc(e.code === 'not_friends' ? T('err_friend_perm') : T('err_view'))}</p>`; return; }
     const elegir = (cont, lista, fijar) => {
       cont.innerHTML = '';
       for (const fila of lista) {
@@ -316,31 +330,31 @@ window.onNeblla = (neblla) => {
   $('proponer').onclick = async () => {
     try {
       await neblla.db.offer({ to: amigo, give: [{ table: 'coleccion', id: mia.id }], get: [{ table: 'coleccion', id: suya.id }] });
-      avisar(`Le has propuesto a ${amigo.name} tu ${POR_ID[mia.criatura].nombre} por su ${POR_ID[suya.criatura].nombre}.`);
+      avisar(T('offer_sent', { name: iso(amigo.name), mine: nombre(mia.criatura), theirs: nombre(suya.criatura) }));
       $('deAmigo').hidden = true;
       pintarOfertas();
-    } catch (e) { avisar({ not_friends: 'Solo puedes cambiar con amigos.', not_owned: 'Esa carta ya no es tuya.' }[e.code] || 'No se ha podido proponer: ' + e.code); }
+    } catch (e) { avisar({ not_friends: T('err_not_friends'), not_owned: T('err_not_owned') }[e.code] || T('err_propose', { code: e.code })); }
   };
   async function pintarOfertas() {
     const lista = await neblla.db.offers().catch(() => []);
     $('ofertas').innerHTML = '';
     for (const o of lista) {
       const box = el('div', 'oferta');
-      const quien = 'Un amigo';
+      const quien = T('friend_generic');
       if (o.mine === 'received') {
-        box.append(el('p', '', `<b>${quien}</b> te ofrece:`));
+        box.append(el('p', '', T('offer_from', { who: esc(quien) })));
         const fila = el('div', 'fila');
         for (const it of o.give) if (it.row) fila.append(carta(it.row, { mini: true }));
         const pide = o.get.map(it => coleccion.find(x => x.id === it.id)).filter(Boolean);
-        if (pide.length) { fila.append(el('span', '', 'a cambio de tu')); pide.forEach(x => fila.append(carta(x, { mini: true }))); }
+        if (pide.length) { fila.append(el('span', '', esc(T('offer_for')))); pide.forEach(x => fila.append(carta(x, { mini: true }))); }
         box.append(fila);
-        const si = el('button', 'btn peq', 'Aceptar'), no = el('button', 'btn peq sec', 'Rechazar');
-        si.onclick = async () => { try { await neblla.db.acceptOffer(o.id); avisar('¡Cambio hecho!'); await cargarColeccion(); } catch (e) { avisar(e.code === 'offer_changed' ? 'Esa carta ya no está disponible.' : 'No se ha podido hacer el cambio.'); } pintarOfertas(); };
+        const si = el('button', 'btn peq', esc(T('accept'))), no = el('button', 'btn peq sec', esc(T('decline')));
+        si.onclick = async () => { try { await neblla.db.acceptOffer(o.id); avisar(T('trade_done')); await cargarColeccion(); } catch (e) { avisar(e.code === 'offer_changed' ? T('err_offer_changed') : T('err_trade')); } pintarOfertas(); };
         no.onclick = async () => { await neblla.db.declineOffer(o.id).catch(() => {}); pintarOfertas(); };
         box.append(si, ' ', no);
       } else {
-        box.append(el('p', 'nota', 'Esperando a que tu amigo acepte tu propuesta.'));
-        const cancelar = el('button', 'btn peq sec', 'Retirarla');
+        box.append(el('p', 'nota', esc(T('waiting_friend'))));
+        const cancelar = el('button', 'btn peq sec', esc(T('withdraw')));
         cancelar.onclick = async () => { await neblla.db.cancelOffer(o.id).catch(() => {}); pintarOfertas(); };
         box.append(cancelar);
       }
@@ -348,34 +362,51 @@ window.onNeblla = (neblla) => {
     }
   }
   neblla.db.on('offer', async ({ action }) => {
-    if (action === 'new') avisar('Te han propuesto un cambio de cartas: míralo en Amigos.');
-    if (action === 'done') { await cargarColeccion(); avisar('Un cambio de cartas se ha completado.'); }
+    if (action === 'new') avisar(T('offer_new'));
+    if (action === 'done') { await cargarColeccion(); avisar(T('offer_done')); }
     if (!$('vAmigos').hidden) pintarOfertas();
   });
 
   // ── Shop ───────────────────────────────────────────────────────────────
-  const texto = (v) => typeof v === 'string' ? v : (v?.es || v?.en || Object.values(v || {})[0] || '');
-  const precio = (p) => new Intl.NumberFormat('es', { style: 'currency', currency: (p.currency || 'eur').toUpperCase() }).format((p.price || 0) / 100);
+  const texto = (v) => typeof v === 'string' ? v : (v?.[nebllaLang.lang] || v?.en || v?.es || Object.values(v || {})[0] || '');
+  const precio = (p) => new Intl.NumberFormat(nebllaLang.lang, { style: 'currency', currency: (p.currency || 'eur').toUpperCase() }).format((p.price || 0) / 100);
   async function pintarTienda() {
     const productos = await neblla.shop.products().catch(() => []);
     const t = neblla.shop.testMode;   // known after products()
     $('pruebas').hidden = !t;
-    if (t) $('pruebas').textContent = `Esto es un ejemplo: no se cobra nada. Paga con la tarjeta de prueba ${t.card}, cualquier fecha futura y cualquier CVC.`;
+    if (t) $('pruebas').textContent = T('shop_test', { card: t.card });
     $('productos').innerHTML = '';
-    if (!productos.length) $('productos').innerHTML = '<p class="nota">La tienda abre muy pronto.</p>';
+    if (!productos.length) $('productos').innerHTML = `<p class="nota">${esc(T('shop_soon'))}</p>`;
     for (const p of productos) {
-      const box = el('div', 'producto', `<b>${texto(p.name)}</b><span class="nota">${texto(p.description)}</span><span class="precio">${p.waiting ? 'Muy pronto' : precio(p)}</span>`);
-      const b = el('button', 'btn', 'Comprar');
+      const box = el('div', 'producto', `<b>${esc(texto(p.name))}</b><span class="nota">${esc(texto(p.description))}</span><span class="precio">${esc(p.waiting ? T('coming_soon') : precio(p))}</span>`);
+      const b = el('button', 'btn', esc(T('buy')));
       b.disabled = !!p.waiting;
       b.onclick = async () => {
         try { await neblla.shop.buy(p.productId); }
-        catch (e) { avisar(e.code === 'popup_blocked' ? 'Tu navegador ha bloqueado la ventana del pago.' : e.code === 'login_required' ? 'Entra con tu cuenta para comprar.' : 'No se ha podido abrir el pago.'); }
+        catch (e) { avisar(e.code === 'popup_blocked' ? T('err_pay_popup') : e.code === 'login_required' ? T('err_pay_login') : T('err_pay')); }
       };
       box.append(b);
       $('productos').append(box);
     }
   }
-  neblla.shop.on('purchase', async () => { avisar('¡Compra hecha! Ya tienes tus sobres.'); await pintarSobre(); });
+  neblla.shop.on('purchase', async () => { avisar(T('purchased')); await pintarSobre(); });
+
+  // ── Language: the chrome and the views painted by code follow nebllaLang ──
+  function textosFijos() {
+    document.title = `${T('app_name')} · ${T('subtitle')}`;
+    const m = document.querySelector('meta[name="description"]');
+    if (m) m.setAttribute('content', T('meta_desc'));
+    $('sobre').setAttribute('aria-label', T('pack_aria'));
+  }
+  textosFijos();
+  nebllaLang.on(() => {
+    textosFijos();
+    pintarSobre();
+    if (!$('vColeccion').hidden) pintarColeccion();
+    if (!$('vAmigos').hidden) pintarAmigos();
+    if (!$('vTienda').hidden) pintarTienda();
+    if (enDuelo && ultimo) pintarDuelo(ultimo);
+  });
 
   arrancar();
 };

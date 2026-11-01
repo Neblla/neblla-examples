@@ -1,55 +1,57 @@
 // creatures.js — the 30 creatures of «Criaturas», and how each one is drawn.
+// The names live in lang/<code>.json (c_<id>, element_<x>, rarity_<x>): here
+// there is only the stable id, which is also what the collection saves.
 // Everything is drawn by code (SVG): no image files, no outside art.
 // The draw rules (how many copies of each, so how rare) live in the app's
 // settings (`draws.sobre`), not here: this file only paints.
 
 const CRIATURAS = [
   // fuego
-  { id: 'chispin',    nombre: 'Chispín',    elemento: 'fuego',  rareza: 'comun',      fuerza: 1 },
-  { id: 'brasilla',   nombre: 'Brasilla',   elemento: 'fuego',  rareza: 'comun',      fuerza: 2 },
-  { id: 'ascuin',     nombre: 'Ascuín',     elemento: 'fuego',  rareza: 'comun',      fuerza: 3 },
-  { id: 'tizon',      nombre: 'Tizón',      elemento: 'fuego',  rareza: 'comun',      fuerza: 4 },
-  { id: 'fogarato',   nombre: 'Fogarato',   elemento: 'fuego',  rareza: 'rara',       fuerza: 4 },
-  { id: 'llamaron',   nombre: 'Llamarón',   elemento: 'fuego',  rareza: 'rara',       fuerza: 5 },
-  { id: 'volcanito',  nombre: 'Volcanito',  elemento: 'fuego',  rareza: 'rara',       fuerza: 6 },
-  { id: 'pirolobo',   nombre: 'Pirolobo',   elemento: 'fuego',  rareza: 'epica',      fuerza: 7 },
-  { id: 'magmazor',   nombre: 'Magmazor',   elemento: 'fuego',  rareza: 'epica',      fuerza: 8 },
-  { id: 'solferon',   nombre: 'Solferón',   elemento: 'fuego',  rareza: 'legendaria', fuerza: 10 },
+  { id: 'chispin',    elemento: 'fuego',  rareza: 'comun',      fuerza: 1 },
+  { id: 'brasilla',   elemento: 'fuego',  rareza: 'comun',      fuerza: 2 },
+  { id: 'ascuin',     elemento: 'fuego',  rareza: 'comun',      fuerza: 3 },
+  { id: 'tizon',      elemento: 'fuego',  rareza: 'comun',      fuerza: 4 },
+  { id: 'fogarato',   elemento: 'fuego',  rareza: 'rara',       fuerza: 4 },
+  { id: 'llamaron',   elemento: 'fuego',  rareza: 'rara',       fuerza: 5 },
+  { id: 'volcanito',  elemento: 'fuego',  rareza: 'rara',       fuerza: 6 },
+  { id: 'pirolobo',   elemento: 'fuego',  rareza: 'epica',      fuerza: 7 },
+  { id: 'magmazor',   elemento: 'fuego',  rareza: 'epica',      fuerza: 8 },
+  { id: 'solferon',   elemento: 'fuego',  rareza: 'legendaria', fuerza: 10 },
   // agua
-  { id: 'gotin',      nombre: 'Gotín',      elemento: 'agua',   rareza: 'comun',      fuerza: 1 },
-  { id: 'charquillo', nombre: 'Charquillo', elemento: 'agua',   rareza: 'comun',      fuerza: 2 },
-  { id: 'burbujo',    nombre: 'Burbujo',    elemento: 'agua',   rareza: 'comun',      fuerza: 3 },
-  { id: 'olita',      nombre: 'Olita',      elemento: 'agua',   rareza: 'comun',      fuerza: 4 },
-  { id: 'medusela',   nombre: 'Medusela',   elemento: 'agua',   rareza: 'rara',       fuerza: 4 },
-  { id: 'corrienton', nombre: 'Corrientón', elemento: 'agua',   rareza: 'rara',       fuerza: 5 },
-  { id: 'caracolon',  nombre: 'Caracolón',  elemento: 'agua',   rareza: 'rara',       fuerza: 6 },
-  { id: 'marejadon',  nombre: 'Marejadón',  elemento: 'agua',   rareza: 'epica',      fuerza: 7 },
-  { id: 'abisalia',   nombre: 'Abisalia',   elemento: 'agua',   rareza: 'epica',      fuerza: 8 },
-  { id: 'leviatina',  nombre: 'Leviatina',  elemento: 'agua',   rareza: 'legendaria', fuerza: 10 },
+  { id: 'gotin',      elemento: 'agua',   rareza: 'comun',      fuerza: 1 },
+  { id: 'charquillo', elemento: 'agua',   rareza: 'comun',      fuerza: 2 },
+  { id: 'burbujo',    elemento: 'agua',   rareza: 'comun',      fuerza: 3 },
+  { id: 'olita',      elemento: 'agua',   rareza: 'comun',      fuerza: 4 },
+  { id: 'medusela',   elemento: 'agua',   rareza: 'rara',       fuerza: 4 },
+  { id: 'corrienton', elemento: 'agua',   rareza: 'rara',       fuerza: 5 },
+  { id: 'caracolon',  elemento: 'agua',   rareza: 'rara',       fuerza: 6 },
+  { id: 'marejadon',  elemento: 'agua',   rareza: 'epica',      fuerza: 7 },
+  { id: 'abisalia',   elemento: 'agua',   rareza: 'epica',      fuerza: 8 },
+  { id: 'leviatina',  elemento: 'agua',   rareza: 'legendaria', fuerza: 10 },
   // planta
-  { id: 'brotin',     nombre: 'Brotín',     elemento: 'planta', rareza: 'comun',      fuerza: 1 },
-  { id: 'musguin',    nombre: 'Musguín',    elemento: 'planta', rareza: 'comun',      fuerza: 2 },
-  { id: 'hojarin',    nombre: 'Hojarín',    elemento: 'planta', rareza: 'comun',      fuerza: 3 },
-  { id: 'setilla',    nombre: 'Setilla',    elemento: 'planta', rareza: 'comun',      fuerza: 4 },
-  { id: 'raizon',     nombre: 'Raizón',     elemento: 'planta', rareza: 'rara',       fuerza: 4 },
-  { id: 'espinardo',  nombre: 'Espinardo',  elemento: 'planta', rareza: 'rara',       fuerza: 5 },
-  { id: 'floribela',  nombre: 'Floribela',  elemento: 'planta', rareza: 'rara',       fuerza: 6 },
-  { id: 'robledon',   nombre: 'Robledón',   elemento: 'planta', rareza: 'epica',      fuerza: 7 },
-  { id: 'zarzaron',   nombre: 'Zarzarón',   elemento: 'planta', rareza: 'epica',      fuerza: 8 },
-  { id: 'bosquimor',  nombre: 'Bosquimor',  elemento: 'planta', rareza: 'legendaria', fuerza: 10 },
+  { id: 'brotin',     elemento: 'planta', rareza: 'comun',      fuerza: 1 },
+  { id: 'musguin',    elemento: 'planta', rareza: 'comun',      fuerza: 2 },
+  { id: 'hojarin',    elemento: 'planta', rareza: 'comun',      fuerza: 3 },
+  { id: 'setilla',    elemento: 'planta', rareza: 'comun',      fuerza: 4 },
+  { id: 'raizon',     elemento: 'planta', rareza: 'rara',       fuerza: 4 },
+  { id: 'espinardo',  elemento: 'planta', rareza: 'rara',       fuerza: 5 },
+  { id: 'floribela',  elemento: 'planta', rareza: 'rara',       fuerza: 6 },
+  { id: 'robledon',   elemento: 'planta', rareza: 'epica',      fuerza: 7 },
+  { id: 'zarzaron',   elemento: 'planta', rareza: 'epica',      fuerza: 8 },
+  { id: 'bosquimor',  elemento: 'planta', rareza: 'legendaria', fuerza: 10 },
 ];
 const POR_ID = Object.fromEntries(CRIATURAS.map(c => [c.id, c]));
 
 const ELEMENTOS = {
-  fuego:  { nombre: 'Fuego',  icono: '🔥', cuerpo: ['#ff8a4c', '#e2522b'], tripa: '#ffd29a', fondo: ['#fff1e6', '#ffd7bd'] },
-  agua:   { nombre: 'Agua',   icono: '💧', cuerpo: ['#5cc4f2', '#2f86d6'], tripa: '#c9f1ff', fondo: ['#e8f7ff', '#c4e8fb'] },
-  planta: { nombre: 'Planta', icono: '🌿', cuerpo: ['#7fd06a', '#3f9a45'], tripa: '#e3f7c6', fondo: ['#eefbe6', '#cdeec0'] },
+  fuego:  { icono: '🔥', cuerpo: ['#ff8a4c', '#e2522b'], tripa: '#ffd29a', fondo: ['#fff1e6', '#ffd7bd'] },
+  agua:   { icono: '💧', cuerpo: ['#5cc4f2', '#2f86d6'], tripa: '#c9f1ff', fondo: ['#e8f7ff', '#c4e8fb'] },
+  planta: { icono: '🌿', cuerpo: ['#7fd06a', '#3f9a45'], tripa: '#e3f7c6', fondo: ['#eefbe6', '#cdeec0'] },
 };
 const RAREZAS = {
-  comun:      { nombre: 'Común',      marco: '#b8b2a7', orden: 0 },
-  rara:       { nombre: 'Rara',       marco: '#3e7be0', orden: 1 },
-  epica:      { nombre: 'Épica',      marco: '#9a4fd8', orden: 2 },
-  legendaria: { nombre: 'Legendaria', marco: '#e0a51c', orden: 3 },
+  comun:      { marco: '#b8b2a7', orden: 0 },
+  rara:       { marco: '#3e7be0', orden: 1 },
+  epica:      { marco: '#9a4fd8', orden: 2 },
+  legendaria: { marco: '#e0a51c', orden: 3 },
 };
 // Fire beats plant, plant beats water, water beats fire: +3 strength.
 const GANA_A = { fuego: 'planta', planta: 'agua', agua: 'fuego' };
@@ -67,7 +69,7 @@ function semilla(texto) {
 let dibujos = 0;
 
 /** The creature's picture, as SVG markup (viewBox 0 0 120 120). */
-function dibujo(c, { silueta = false } = {}) {
+function dibujo(c, { silueta = false, etiqueta = '' } = {}) {
   const r = semilla(c.id);
   const e = ELEMENTOS[c.elemento];
   const nivel = RAREZAS[c.rareza].orden;
@@ -106,7 +108,7 @@ function dibujo(c, { silueta = false } = {}) {
     <circle cx="${cx + sep + 1}" cy="${cy - 3}" r="${ojo * 0.6}" fill="${tinta}"/>
     <path d="M${cx - 6} ${cy + 8} Q${cx} ${cy + 13 + r() * 4} ${cx + 6} ${cy + 8}" fill="none" stroke="${tinta}" stroke-width="2" stroke-linecap="round"/>
     <circle cx="${cx - sep - 6}" cy="${cy + 6}" r="3" fill="#ff8fa0" opacity=".6"/><circle cx="${cx + sep + 6}" cy="${cy + 6}" r="3" fill="#ff8fa0" opacity=".6"/>`;
-  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${silueta ? 'Una criatura que aún no tienes' : c.nombre}">
+  return `<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${etiqueta}">
     <defs><linearGradient id="${g}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${e.cuerpo[0]}"/><stop offset="1" stop-color="${e.cuerpo[1]}"/></linearGradient></defs>
     ${extra}${pies}
     <ellipse cx="${cx}" cy="${cy}" rx="${ancho}" ry="${alto}" fill="${relleno}" stroke="${tinta}" stroke-width="2.5"/>

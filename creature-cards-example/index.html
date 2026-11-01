@@ -9,12 +9,13 @@
 </head>
 <body>
   <header class="top">
-    <div class="marca"><span class="logo">✦</span> Criaturas</div>
+    <div class="marca"><span class="logo">✦</span> <span data-i18n="app_name">Criaturas</span></div>
     <div class="saldo" id="saldo" hidden>
-      <span title="Sobres">🎴 <b id="nSobres">0</b></span>
-      <span title="Monedas">🪙 <b id="nMonedas">0</b></span>
+      <span data-i18n-title="packs_title" title="Sobres">🎴 <b id="nSobres">0</b></span>
+      <span data-i18n-title="coins_title" title="Monedas">🪙 <b id="nMonedas">0</b></span>
     </div>
-    <button class="btn peq" id="entrar" hidden>Entrar</button>
+    <div class="idioma" data-neblla-lang-switcher></div>
+    <button class="btn peq" id="entrar" data-i18n="login" hidden>Login</button>
   </header>
 
   <main>
@@ -25,20 +26,20 @@
       <div class="sobre-zona">
         <button class="sobre" id="sobre" aria-label="Abrir un sobre">
           <span class="sobre-brillo"></span>
-          <span class="sobre-titulo">Sobre de<br><b>Criaturas</b></span>
-          <span class="sobre-sub">5 cartas</span>
+          <span class="sobre-titulo" data-i18n-html="pack_title">Sobre de<br><b>Criaturas</b></span>
+          <span class="sobre-sub" data-i18n="pack_cards">5 cartas</span>
         </button>
         <div class="sobre-acciones">
-          <button class="btn grande" id="abrirGratis">Abrir gratis</button>
-          <button class="btn" id="abrirSobre">Abrir · 1 🎴</button>
-          <button class="btn" id="abrirMonedas">Abrir · 100 🪙</button>
+          <button class="btn grande" id="abrirGratis" data-i18n="open_free">Abrir gratis</button>
+          <button class="btn" id="abrirSobre" data-i18n="open_pack">Abrir · 1 🎴</button>
+          <button class="btn" id="abrirMonedas" data-i18n="open_coins">Abrir · 100 🪙</button>
           <p class="nota" id="proximoGratis"></p>
         </div>
       </div>
       <div class="reparto" id="reparto"></div>
       <details class="probas">
-        <summary>Qué puede salir</summary>
-        <p class="nota">Cada sobre baraja las 939 cartas de nuevo y saca 5. Las cartas son tuyas antes de verlas.</p>
+        <summary data-i18n="odds_summary">Qué puede salir</summary>
+        <p class="nota" data-i18n="odds_note">Cada sobre baraja las 939 cartas de nuevo y saca 5. Las cartas son tuyas antes de verlas.</p>
         <div id="probas"></div>
       </details>
     </section>
@@ -46,71 +47,71 @@
     <!-- Colección -->
     <section id="vColeccion" class="vista" hidden>
       <div class="cabecera">
-        <h2>Tu colección <small id="progreso"></small></h2>
+        <h2><span data-i18n="collection_h">Tu colección</span> <small id="progreso"></small></h2>
         <div class="filtros" id="filtros">
-          <button data-f="" class="on">Todas</button>
+          <button data-f="" class="on" data-i18n="filter_all">Todas</button>
           <button data-f="fuego">🔥</button><button data-f="agua">💧</button><button data-f="planta">🌿</button>
         </div>
       </div>
       <div class="rejilla" id="rejilla"></div>
-      <h3>Tu mazo de duelo <small id="mazoCuenta"></small></h3>
-      <p class="nota">Toca una carta de tu colección para meterla o sacarla del mazo. Hacen falta 8.</p>
+      <h3><span data-i18n="deck_h">Tu mazo de duelo</span> <small id="mazoCuenta"></small></h3>
+      <p class="nota" data-i18n="deck_hint">Toca una carta de tu colección para meterla o sacarla del mazo. Hacen falta 8.</p>
       <div class="fila" id="mazo"></div>
-      <button class="btn peq" id="mazoAuto">Elegir las 8 más fuertes</button>
+      <button class="btn peq" id="mazoAuto" data-i18n="deck_auto">Elegir las 8 más fuertes</button>
     </section>
 
     <!-- Duelo -->
     <section id="vDuelo" class="vista" hidden>
       <div id="dueloFuera">
-        <h2>Duelo</h2>
-        <p>Tu mazo de 8 contra el de otro jugador. Cada ronda uno ataca y el otro responde: gana la carta con más fuerza, y el elemento que vence suma 3 (🔥 vence a 🌿, 🌿 a 💧 y 💧 a 🔥). El primero en ganar 4 rondas, gana.</p>
-        <button class="btn grande" id="buscar">Buscar rival</button>
+        <h2 data-i18n="duel_h">Duelo</h2>
+        <p data-i18n="duel_desc">Tu mazo de 8 contra el de otro jugador. Cada ronda uno ataca y el otro responde: gana la carta con más fuerza, y el elemento que vence suma 3 (🔥 vence a 🌿, 🌿 a 💧 y 💧 a 🔥). El primero en ganar 4 rondas, gana.</p>
+        <button class="btn grande" id="buscar" data-i18n="duel_search">Buscar rival</button>
         <p class="nota" id="dueloEstado"></p>
       </div>
       <div id="dueloDentro" hidden>
         <div class="marcador">
-          <div><span id="yoNombre">Tú</span><b id="yoPuntos">0</b></div>
-          <div class="ronda" id="ronda">Ronda 1</div>
-          <div><span id="rivalNombre">Rival</span><b id="rivalPuntos">0</b></div>
+          <div><span id="yoNombre"></span><b id="yoPuntos">0</b></div>
+          <div class="ronda" id="ronda"></div>
+          <div><span id="rivalNombre"></span><b id="rivalPuntos">0</b></div>
         </div>
         <p class="rival-info" id="rivalInfo"></p>
         <div class="mesa" id="mesa"></div>
         <p class="turno" id="turno"></p>
         <div class="fila mano" id="mano"></div>
         <ol class="historial" id="historial"></ol>
-        <button class="btn" id="salir" hidden>Volver</button>
+        <button class="btn" id="salir" data-i18n="duel_back" hidden>Volver</button>
       </div>
     </section>
 
     <!-- Amigos -->
     <section id="vAmigos" class="vista" hidden>
-      <h2>Amigos</h2>
+      <h2 data-i18n="friends_h">Amigos</h2>
       <div id="ofertas"></div>
       <ul class="amigos" id="amigos"></ul>
       <div id="deAmigo" hidden>
         <h3 id="deAmigoTitulo"></h3>
-        <p class="nota">Elige una carta suya y una tuya para proponerle un cambio.</p>
+        <p class="nota" data-i18n="friends_pick">Elige una carta suya y una tuya para proponerle un cambio.</p>
         <div class="rejilla peq" id="deAmigoRejilla"></div>
-        <h4>A cambio de una tuya</h4>
+        <h4 data-i18n="in_exchange">A cambio de una tuya</h4>
         <div class="rejilla peq" id="miaRejilla"></div>
-        <button class="btn" id="proponer" disabled>Proponer el cambio</button>
+        <button class="btn" id="proponer" data-i18n="propose" disabled>Proponer el cambio</button>
       </div>
     </section>
 
     <!-- Tienda -->
     <section id="vTienda" class="vista" hidden>
-      <h2>Tienda</h2>
+      <h2 data-i18n="shop_h">Tienda</h2>
       <p class="nota" id="pruebas" hidden></p>
       <div class="productos" id="productos"></div>
     </section>
   </main>
 
   <nav class="tabs" id="tabs">
-    <button data-v="vSobres" class="on">🎴<span>Sobres</span></button>
-    <button data-v="vColeccion">📖<span>Colección</span></button>
-    <button data-v="vDuelo">⚔️<span>Duelo</span></button>
-    <button data-v="vAmigos">👥<span>Amigos</span></button>
-    <button data-v="vTienda">🛒<span>Tienda</span></button>
+    <button data-v="vSobres" class="on">🎴<span data-i18n="tab_packs">Sobres</span></button>
+    <button data-v="vColeccion">📖<span data-i18n="tab_collection">Colección</span></button>
+    <button data-v="vDuelo">⚔️<span data-i18n="tab_duel">Duelo</span></button>
+    <button data-v="vAmigos">👥<span data-i18n="tab_friends">Amigos</span></button>
+    <button data-v="vTienda">🛒<span data-i18n="tab_shop">Tienda</span></button>
   </nav>
 
   <div class="carta-grande" id="detalle" hidden></div>
@@ -118,5 +119,6 @@
   <script src="creatures.js"></script>
   <script src="client.js"></script>
   <script src="https://neblla.com/connect/app.js"></script>
+  <script src="https://neblla.com/connect/lang.js"></script>
 </body>
 </html>
