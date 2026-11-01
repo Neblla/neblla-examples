@@ -6,30 +6,56 @@
   <title>Tu plantilla · Plantillas Luna</title>
   <meta name="robots" content="noindex">
   <link rel="stylesheet" href="main.css">
+  <script src="https://neblla.com/connect/lang.js"></script>
 </head>
 <body class="tpl">
   <main>
-    <p class="notice"><b>Así se abre lo que compraste.</b> En una tienda de verdad, este enlace te lleva a la plantilla en Canva, lista para editar. En este ejemplo no hay plantillas de Canva: te la enseñamos aquí.</p>
+    <div class="lang-box" data-neblla-lang-switcher></div>
+    <p class="notice" data-i18n-html="tplNotice"><b>Así se abre lo que compraste.</b> En una tienda de verdad, este enlace te lleva a la plantilla en Canva, lista para editar. En este ejemplo no hay plantillas de Canva: te la enseñamos aquí.</p>
     <h1 id="title">Tu plantilla</h1>
     <img id="tplImg" class="tpl-img" alt="">
     <ol class="how">
-      <li>Abre la plantilla y pulsa «Usar plantilla» (en Canva, gratis).</li>
-      <li>Cambia los textos, tu foto y, si quieres, los colores.</li>
-      <li>Descárgala en PDF o en PNG, y listo.</li>
+      <li data-i18n="tplS1">Abre la plantilla y pulsa «Usar plantilla» (en Canva, gratis).</li>
+      <li data-i18n="tplS2">Cambia los textos, tu foto y, si quieres, los colores.</li>
+      <li data-i18n="tplS3">Descárgala en PDF o en PNG, y listo.</li>
     </ol>
-    <p><a class="btn" href="./">Volver a la tienda</a></p>
+    <p><a class="btn" href="./" data-i18n="tplBack">Volver a la tienda</a></p>
   </main>
   <script>
-    const T = {
+    const ES = {
       'cv-nordico': 'CV Nórdico', 'cv-minimal': 'CV Minimal', 'cv-creativo': 'CV Creativo',
       'ig-cafeteria': '30 posts de Instagram para tu cafetería', 'ig-yoga': '30 posts de Instagram para tu estudio de yoga',
     };
     const id = new URLSearchParams(location.search).get('p');
-    if (T[id]) {
-      document.getElementById('title').textContent = T[id];
-      const img = document.getElementById('tplImg');
-      img.src = 'img/' + id + '.svg'; img.alt = 'La plantilla ' + T[id];
+    const camel = (s) => s.replace(/-(\w)/g, (m, c) => c.toUpperCase());
+    const L = window.nebllaLang;
+
+    // Los SVG de la plantilla llevan su texto en data-k: se rellenan en el idioma activo
+    // y se enseñan como imagen (un <img src=".svg"> no puede leer el idioma de la página).
+    async function localSvg(src) {
+      try {
+        const doc = new DOMParser().parseFromString(await (await fetch(src)).text(), 'image/svg+xml');
+        const loc = { pt: 'pt-BR', zh: 'zh-CN' }[L.lang] || L.lang;
+        for (const e of doc.querySelectorAll('[data-k]')) {
+          const [k, up] = e.getAttribute('data-k').split(':');
+          const price = e.getAttribute('data-price');
+          const v = L.t(k, price ? { price: new Intl.NumberFormat(loc, { style: 'currency', currency: 'EUR' }).format(price / 100) } : undefined);
+          e.textContent = up ? v.toLocaleUpperCase(L.lang) : v;
+        }
+        for (const e of doc.querySelectorAll('[data-n]')) e.textContent = new Intl.NumberFormat(loc).format(Number(e.getAttribute('data-n')));
+        return URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)], { type: 'image/svg+xml' }));
+      } catch (e) { return src; }
     }
+    async function paint() {
+      document.title = L.t('tplTitle');
+      if (!ES[id]) { document.getElementById('title').textContent = L.t('yourTpl'); return; }
+      const name = L.t('p.' + camel(id));
+      document.getElementById('title').textContent = name;
+      const img = document.getElementById('tplImg');
+      img.alt = L.t('tplAlt', { name });
+      img.src = await localSvg('img/' + id + '.svg');
+    }
+    L.ready.then(() => { paint(); L.on(paint); });
   </script>
 </body>
 </html>

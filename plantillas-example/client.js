@@ -3,22 +3,53 @@
 // de Excel (un fichero privado que se descarga, C230) y la suscripción
 // «Todo el catálogo», que lo da todo mientras está viva. Se compra sin
 // registrarse, solo con el email. Todo con neblla.*, sin servidor propio.
-window.onNeblla = (neblla) => {
+// Los textos de pantalla viven en lang/*.json (los pinta /connect/lang.js); los
+// productos llevan nombre y descripción por idioma en Neblla; los SVG de las
+// vistas previas llevan su texto en data-k y se rellenan aquí (C897).
+window.onNeblla = async (neblla) => {
+const L = window.nebllaLang;
+await L.ready;
+const t = (k, v) => L.t(k, v);
 const $ = (id) => document.getElementById(id);
 let products = [];
+let tab = 'tienda';
 
-const money = (p) => (p.price / 100).toLocaleString('es-ES', { style: 'currency', currency: (p.currency || 'eur').toUpperCase() });
-const nameOf = (p) => typeof p.name === 'object' ? (p.name.es || Object.values(p.name)[0]) : p.name;
-const textOf = (v) => v && typeof v === 'object' ? (v.es || Object.values(v)[0] || '') : (v || '');
+const locale = () => ({ pt: 'pt-BR', zh: 'zh-CN' }[L.lang] || L.lang);
+const fmtMoney = (cents, cur) => new Intl.NumberFormat(locale(), { style: 'currency', currency: (cur || 'eur').toUpperCase() }).format(cents / 100);
+const money = (p) => fmtMoney(p.price, p.currency);
+// Texto por idioma: el activo, si no el español (el de reserva), si no el primero.
+const pick = (v) => v && typeof v === 'object' ? (v[L.lang] || v.es || Object.values(v)[0] || '') : (v || '');
+const nameOf = (p) => pick(p.name);
+const textOf = pick;
 const imgKey = (p) => (/img\/([a-z-]+)\.svg/.exec(p.image || '') || [])[1] || '';
 const loggedIn = () => !!neblla.auth.me?.loggedIn;
-const errText = (err) => ({
-  product_waiting: 'Los pagos de prueba aún no están activos en este ejemplo.',
-  stripe_test_account_required: 'Los pagos de prueba aún no están activos en este ejemplo.',
-  payouts_not_ready: 'Los pagos de prueba aún no están activos en este ejemplo.',
-  already_owned: 'Ya la tienes: está en «Mis compras».',
-  login_required: 'Entra con tu cuenta, o con el email con el que compraste, para ver tus compras.',
-}[err?.code || err?.message]) || 'No se pudo (' + (err?.code || err?.message || err) + ').';
+const errText = (err) => {
+  const code = err?.code || err?.message;
+  const known = { product_waiting: 'errSoon', stripe_test_account_required: 'errSoon', payouts_not_ready: 'errSoon', already_owned: 'errOwned', login_required: 'errLogin' }[code];
+  return known ? t(known) : t('errGeneric', { code: code || err });
+};
+
+// ── Vistas previas: SVG con el texto en el idioma activo ───────────────
+const svgCache = new Map();
+async function svgUrl(src) {
+  const key = src + '|' + L.lang;
+  if (svgCache.has(key)) return svgCache.get(key);
+  let url = src;
+  try {
+    const doc = new DOMParser().parseFromString(await (await fetch(src)).text(), 'image/svg+xml');
+    for (const e of doc.querySelectorAll('[data-k]')) {
+      const [k, up] = e.getAttribute('data-k').split(':');
+      const price = e.getAttribute('data-price');
+      const v = t(k, price ? { price: fmtMoney(Number(price), 'eur') } : undefined);
+      e.textContent = up ? v.toLocaleUpperCase(L.lang) : v;
+    }
+    for (const e of doc.querySelectorAll('[data-n]')) e.textContent = new Intl.NumberFormat(locale()).format(Number(e.getAttribute('data-n')));
+    url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(doc)], { type: 'image/svg+xml' }));
+  } catch (e) { /* sin SVG traducido: la imagen original */ }
+  svgCache.set(key, url);
+  return url;
+}
+function setSvg(img, src) { svgUrl(src).then((u) => { img.src = u; }); }
 
 function status(text, bad) {
   const s = $('status');
@@ -29,22 +60,22 @@ function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.
 
 // ── Pestañas ────────────────────────────────────────────────────────────
 for (const b of document.querySelectorAll('[data-tab]')) b.onclick = () => show(b.dataset.tab);
-function show(tab) {
-  for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === tab);
-  for (const s of document.querySelectorAll('.tab')) s.hidden = s.id !== 'tab-' + tab;
-  status('');
-  ({ tienda: renderShop, mias: renderMine })[tab]().catch((e) => status(errText(e), true));
-  window.scrollTo(0, 0);
+function draw(name) {
+  tab = name;
+  for (const b of document.querySelectorAll('.tabs button')) b.classList.toggle('on', b.dataset.tab === name);
+  for (const s of document.querySelectorAll('.tab')) s.hidden = s.id !== 'tab-' + name;
+  return ({ tienda: renderShop, mias: renderMine })[name]().catch((e) => status(errText(e), true));
 }
+function show(name) { status(''); draw(name); window.scrollTo(0, 0); }
 
 function renderWho() {
   const who = $('who');
   who.replaceChildren();
   if (loggedIn()) {
-    who.append(el('b', '', neblla.auth.me.publicInfo?.name || 'Mi cuenta'));
-    const out = el('button', 'link', 'Salir'); out.onclick = () => neblla.auth.logout(); who.append(out);
+    who.append(el('b', '', neblla.auth.me.publicInfo?.name || t('account')));
+    const out = el('button', 'link', t('logout')); out.onclick = () => neblla.auth.logout(); who.append(out);
   } else {
-    const b = el('button', 'btn light', 'Entrar'); b.onclick = () => neblla.auth.login(); who.append(b);
+    const b = el('button', 'btn light', t('login')); b.onclick = () => neblla.auth.login(); who.append(b);
   }
 }
 
@@ -53,14 +84,15 @@ const owned = (p) => !!neblla.shop.purchases?.[p.productId];
 const clubOn = () => products.some(p => p.type === 'subscription' && neblla.shop.purchases?.[p.productId]?.active);
 
 async function buy(p) {
-  if (p.waiting) return status('Los pagos de prueba aún no están activos en este ejemplo: pronto podrás pagar con la tarjeta 4242. No se ha cobrado nada.', true);
-  try { await neblla.shop.buy(p.productId); status('Se ha abierto el pago. Paga con la tarjeta 4242 4242 4242 4242: no se cobra nada.'); }
+  if (p.waiting) return status(t('payWaiting'), true);
+  try { await neblla.shop.buy(p.productId); status(t('payOpened')); }
   catch (e) { status(errText(e), true); }
 }
 
 function card(p) {
   const c = el('article', 'card');
-  const img = el('img'); img.src = p.image; img.alt = 'Vista previa de ' + nameOf(p); img.loading = 'lazy';
+  const img = el('img'); img.alt = t('preview', { name: nameOf(p) }); img.loading = 'lazy';
+  setSvg(img, p.image);
   img.onclick = () => zoom(p);
   c.append(img);
   const body = el('div', 'card-b');
@@ -69,10 +101,10 @@ function card(p) {
   const row = el('div', 'row');
   row.append(el('span', 'price', money(p)));
   if (owned(p) || clubOn()) {
-    const go = el('button', 'btn ghost small', owned(p) ? 'Ya es tuya ✓' : 'En tu catálogo ✓');
+    const go = el('button', 'btn ghost small', owned(p) ? t('owned') : t('inCatalog'));
     go.onclick = () => show('mias'); row.append(go);
-  } else if (p.waiting) row.append(el('span', 'tag', 'Próximamente'));
-  else { const b = el('button', 'btn small', 'Comprar'); b.onclick = () => buy(p); row.append(b); }
+  } else if (p.waiting) row.append(el('span', 'tag', t('comingSoon')));
+  else { const b = el('button', 'btn small', t('buy')); b.onclick = () => buy(p); row.append(b); }
   body.append(row);
   c.append(body);
   return c;
@@ -90,23 +122,23 @@ async function renderShop() {
   club.replaceChildren();
   const sub = products.find(p => p.type === 'subscription');
   if (!sub) return;
-  const img = el('img'); img.src = sub.image; img.alt = 'Todo el catálogo';
-  const t = el('div', 'club-b');
-  t.append(el('div', 'kicker', 'Suscripción'), el('h2', '', nameOf(sub)));
-  t.append(el('p', '', textOf(sub.description) || 'Todas las plantillas de la tienda, y las nuevas de cada mes, mientras sigas suscrita.'));
+  const img = el('img'); img.alt = nameOf(sub); setSvg(img, sub.image);
+  const box = el('div', 'club-b');
+  box.append(el('div', 'kicker', t('kicker')), el('h2', '', nameOf(sub)));
+  box.append(el('p', '', textOf(sub.description)));
   const row = el('div', 'row');
-  row.append(el('span', 'price', money(sub) + ' al mes'));
+  row.append(el('span', 'price', t('perMonth', { price: money(sub) })));
   if (clubOn()) {
-    row.append(el('span', 'tag', 'Ya estás suscrita ✓'));
-    const m = el('button', 'btn ghost small light', 'Gestionar'); m.onclick = () => neblla.shop.manage(sub.productId); row.append(m);
-  } else if (sub.waiting) row.append(el('span', 'tag', 'Próximamente'));
-  else { const b = el('button', 'btn', 'Suscribirme'); b.onclick = () => buy(sub); row.append(b); }
-  t.append(row);
-  club.append(img, t);
+    row.append(el('span', 'tag', t('subscribed')));
+    const m = el('button', 'btn ghost small light', t('manage')); m.onclick = () => neblla.shop.manage(sub.productId); row.append(m);
+  } else if (sub.waiting) row.append(el('span', 'tag', t('comingSoon')));
+  else { const b = el('button', 'btn', t('subscribe')); b.onclick = () => buy(sub); row.append(b); }
+  box.append(row);
+  club.append(img, box);
 }
 
 function zoom(p) {
-  $('lbImg').src = p.image; $('lbImg').alt = nameOf(p);
+  setSvg($('lbImg'), p.image); $('lbImg').alt = nameOf(p);
   $('lbTitle').textContent = nameOf(p); $('lbText').textContent = money(p);
   $('lightbox').hidden = false;
 }
@@ -131,12 +163,12 @@ async function renderMine() {
   for (const i of mine.items || []) add(i.productId, { kind: 'file', ...i });
   for (const c of mine.collections || []) for (const i of (await neblla.media.collection(c.key)).items || []) add(c.productId, { kind: 'file', ...i });
   if (!byProduct.size) {
-    box.append(el('p', 'empty', 'Aún no tienes ninguna plantilla. Lo que compres aparecerá aquí, para abrirlo o descargarlo cuando quieras.'));
-    const b = el('button', 'btn', 'Ver la tienda'); b.onclick = () => show('tienda'); box.append(b);
+    box.append(el('p', 'empty', t('emptyMine')));
+    const b = el('button', 'btn', t('toShop')); b.onclick = () => show('tienda'); box.append(b);
     return;
   }
   const sub = products.find(p => p.type === 'subscription');
-  if (sub && clubOn()) box.append(el('p', 'hint', 'Con «Todo el catálogo» tienes todas las plantillas mientras sigas suscrita.'));
+  if (sub && clubOn()) box.append(el('p', 'hint', t('clubHint')));
   for (const [pid, pieces] of byProduct) {
     const seen = new Set();
     for (const piece of pieces) {
@@ -150,17 +182,18 @@ async function renderMine() {
 
 function line(p, piece) {
   const r = el('div', 'mine-row');
-  if (p?.image) { const i = el('img'); i.src = p.image; i.alt = ''; r.append(i); }
-  const t = el('div', 'mine-t');
-  t.append(el('b', '', piece.title || (p ? nameOf(p) : 'Tu plantilla')));
-  t.append(el('small', '', piece.via === 'subscription' ? 'Con tu suscripción' : 'Comprada'));
-  r.append(t);
+  if (p?.image) { const i = el('img'); i.alt = ''; setSvg(i, p.image); r.append(i); }
+  const box = el('div', 'mine-t');
+  // El título de un fichero es un solo texto (el del Excel, en español): se enseña el nombre del producto.
+  box.append(el('b', '', p ? nameOf(p) : t('yourTpl')));
+  box.append(el('small', '', piece.via === 'subscription' ? t('viaSub') : t('bought')));
+  r.append(box);
   if (piece.kind === 'file') {
-    const b = el('button', 'btn small', 'Descargar');
+    const b = el('button', 'btn small', t('download'));
     b.onclick = () => neblla.media.download(piece.id).catch((e) => status(errText(e), true));
     r.append(b);
   } else if (piece.type === 'link') {
-    const a = el('a', 'btn small', textOf(piece.label) || 'Abrir'); a.href = piece.url; a.target = '_blank'; a.rel = 'noopener';
+    const a = el('a', 'btn small', textOf(piece.label) || t('open')); a.href = piece.url; a.target = '_blank'; a.rel = 'noopener';
     r.append(a);
   } else r.append(el('code', '', piece.text));
   return r;
@@ -168,21 +201,25 @@ function line(p, piece) {
 
 function restoreBox() {
   const f = el('form', 'restore');
-  f.append(el('p', '', '¿Compraste sin registrarte? Escribe tu email y te mandamos un enlace para tener aquí tus compras. O entra con tu cuenta.'));
-  const i = el('input'); i.type = 'email'; i.required = true; i.placeholder = 'tu@email.com';
-  const b = el('button', 'btn', 'Recuperar mis compras');
-  const l = el('button', 'btn ghost', 'Entrar'); l.type = 'button'; l.onclick = () => neblla.auth.login();
+  f.append(el('p', '', t('restoreText')));
+  const i = el('input'); i.type = 'email'; i.required = true; i.placeholder = t('emailPh');
+  const b = el('button', 'btn', t('restoreBtn'));
+  const l = el('button', 'btn ghost', t('login')); l.type = 'button'; l.onclick = () => neblla.auth.login();
   f.append(i, b, l);
   f.onsubmit = async (e) => {
     e.preventDefault();
-    try { await neblla.shop.restore(i.value); status('Te hemos mandado un enlace a ' + i.value + '. Ábrelo en este dispositivo.'); }
+    try { await neblla.shop.restore(i.value); status(t('linkSent', { email: i.value })); }
     catch (err) { status(errText(err), true); }
   };
   return f;
 }
 
-neblla.shop.on('purchase', () => { status('¡Gracias! Ya lo tienes en «Mis compras».'); show('mias'); });
+neblla.shop.on('purchase', () => { status(t('thanks')); show('mias'); });
 for (const ev of ['login', 'logout']) neblla.auth.on(ev, () => { renderWho(); renderShop().catch(() => {}); });
+// Cambio de idioma en vivo: título, cabecera y la pestaña abierta se repintan.
+const retitle = () => { document.title = t('title'); };
+L.on(() => { retitle(); renderWho(); draw(tab); });
+retitle();
 renderWho();
 show('tienda');
 };

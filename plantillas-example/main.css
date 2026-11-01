@@ -15,7 +15,10 @@ h3 { margin: 0 0 4px; font-size: 18px; }
 .hero-in { max-width: 1040px; margin: 0 auto; padding: 36px 16px 30px; display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .hero h1 { margin: 0; font-size: 40px; }
 .sub { margin: 6px 0 0; color: var(--soft); }
+.hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
 .who { display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+.lang-box select { font: inherit; font-size: 14px; color: var(--soft); background: rgba(255, 255, 255, .7); border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; cursor: pointer; }
+body.tpl .lang-box { text-align: end; }
 
 main { max-width: 1040px; margin: 0 auto; padding: 16px; }
 .notice { background: #fff6e0; border: 1px solid #f3dca2; border-radius: 12px; padding: 12px 16px; font-size: 15px; }
@@ -63,7 +66,7 @@ main { max-width: 1040px; margin: 0 auto; padding: 16px; }
 .lightbox img { width: 100%; max-height: 78vh; object-fit: contain; border-radius: 10px; background: #fff; }
 .lightbox figcaption { color: #fff; display: flex; justify-content: space-between; padding: 8px 2px; }
 
-.tabs { position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: center; gap: 4px; background: #fff; border-top: 1px solid var(--line); padding: 8px; z-index: 10; }
+.tabs { position: fixed; bottom: 0; inset-inline: 0; display: flex; justify-content: center; gap: 4px; background: #fff; border-top: 1px solid var(--line); padding: 8px; z-index: 10; }
 .tabs button { border: 0; background: none; font: inherit; font-weight: 600; color: var(--soft); padding: 8px 22px; border-radius: 999px; cursor: pointer; }
 .tabs button.on { background: var(--ink); color: #fff; }
 
@@ -73,6 +76,7 @@ body.tpl main { max-width: 640px; }
 
 @media (max-width: 640px) {
   .hero-in { flex-direction: column; padding-top: 24px; }
+  .hero-side { align-items: flex-start; }
   .hero h1 { font-size: 32px; }
   .club { grid-template-columns: 1fr; }
   .club img { max-width: 220px; }
