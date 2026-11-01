@@ -3,25 +3,26 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Pilla-pilla en el Retiro · un juego en 3D hecho con Neblla</title>
+  <title data-i18n="title">Pilla-pilla en el Retiro · un juego en 3D hecho con Neblla</title>
   <meta name="description" content="Un pilla-pilla en un parque de Madrid, con tu muñeco de Neblla. Que no te pillen: quien la lleve cuando suene el silbato, pierde. Hecho con Mundo, el motor 3D de Neblla.">
   <link rel="stylesheet" href="main.css" />
   <script src="https://neblla.com/connect/app.js"></script>
+  <script src="https://neblla.com/connect/lang.js"></script>
 </head>
 <body>
   <div id="game"></div>
 
   <header class="hud">
     <div class="hud-box">
-      <span class="hud-label">Tiempo</span>
+      <span class="hud-label" data-i18n="time">Tiempo</span>
       <span id="clock" class="hud-big">1:00</span>
     </div>
     <div id="itBox" class="hud-box it" hidden>
-      <span class="hud-label">La lleva</span>
+      <span class="hud-label" data-i18n="itLabel">La lleva</span>
       <span id="itName" class="hud-big">—</span>
     </div>
     <div class="hud-box">
-      <span class="hud-label">Tú la llevaste</span>
+      <span class="hud-label" data-i18n="mine">Tú la llevaste</span>
       <span id="mine" class="hud-big">0,0 s</span>
     </div>
   </header>
@@ -30,13 +31,14 @@
 
   <section id="start" class="card-wrap">
     <div class="card">
-      <h1>Pilla-pilla en el Retiro</h1>
-      <p>Una tarde en el parque con Lucía, Mateo, Sofía y Diego. Quien la lleva persigue a los demás; si te toca, la llevas tú. Toca a otro para pasársela. Al minuto suena el silbato: <b>quien la lleve entonces, pierde</b>, y gana quien menos tiempo la haya llevado.</p>
-      <p class="keys">Muévete con <kbd>WASD</kbd> o las flechas, corre con <kbd>Mayús</kbd> y salta con <kbd>espacio</kbd>. En el móvil, el joystick y el botón de saltar.</p>
+      <h1 data-i18n="heading">Pilla-pilla en el Retiro</h1>
+      <p data-i18n-html="intro">Una tarde en el parque con Lucía, Mateo, Sofía y Diego. Quien la lleva persigue a los demás; si te toca, la llevas tú. Toca a otro para pasársela. Al minuto suena el silbato: <b>quien la lleve entonces, pierde</b>, y gana quien menos tiempo la haya llevado.</p>
+      <p class="keys" data-i18n-html="keys">Muévete con <kbd>WASD</kbd> o las flechas, corre con <kbd>Mayús</kbd> y salta con <kbd>espacio</kbd>. En el móvil, el joystick y el botón de saltar.</p>
       <p id="best" class="best" hidden></p>
-      <p id="loading" class="muted">Preparando el parque…</p>
-      <button id="playBtn" class="btn" type="button" hidden>Jugar</button>
-      <p id="dollHint" class="muted small" hidden>Juegas con el muñeco por defecto. Hazte el tuyo en <a href="https://creator.neblla.com/doll" target="_blank" rel="noopener">Neblla Creator</a> y saldrá aquí.</p>
+      <p id="loading" class="muted" data-i18n="loading">Preparando el parque…</p>
+      <button id="playBtn" class="btn" type="button" data-i18n="play" hidden>Jugar</button>
+      <p id="dollHint" class="muted small" data-i18n-html="doll" hidden>Juegas con el muñeco por defecto. Hazte el tuyo en <a href="https://creator.neblla.com/doll" target="_blank" rel="noopener">Neblla Creator</a> y saldrá aquí.</p>
+      <div class="lang-box" data-neblla-lang-switcher></div>
     </div>
   </section>
 
@@ -45,7 +47,7 @@
       <h2 id="endTitle">¡Silbato!</h2>
       <p id="endText"></p>
       <ol id="table" class="table"></ol>
-      <button id="againBtn" class="btn" type="button">Otra partida</button>
+      <button id="againBtn" class="btn" type="button" data-i18n="again">Otra partida</button>
     </div>
   </section>
 

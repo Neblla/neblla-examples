@@ -35,12 +35,16 @@ const seedParam = Number(new URLSearchParams(location.search).get('seed'));
 const random = rng(Number.isFinite(seedParam) && seedParam > 0 ? seedParam : Date.now());
 
 const $ = (id) => document.getElementById(id);
-const fmt = (s) => s.toFixed(1).replace('.', ',') + ' s';
+// Todo el texto sale de lang/<idioma>.json por nebllaLang.t(); los números, con Intl.
+const tr = (key, vars) => window.nebllaLang.t(key, vars);
+const fmt = (s) => tr('secs', { v: new Intl.NumberFormat(window.nebllaLang.lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(s) });
+const nm = (p) => (p.you ? tr('you') : p.name);
 const flat = (a, b) => Math.hypot(a[0] - b[0], a[2] - b[2]);
 const inPond = (x, z, m = 0) => Math.abs(x - POND.x) < POND.w / 2 + m && Math.abs(z - POND.z) < POND.d / 2 + m;
 const onPath = (x, z) => Math.abs(x) < 3 || Math.abs(z - 10) < 3;
 
 window.onNeblla = async (neblla) => {
+  await window.nebllaLang.ready;
   const game = { ready: false, playing: false, players: [], it: null, time: 0, ends: 0, results: null };
   window.pilla = game;
   try {
@@ -49,9 +53,9 @@ window.onNeblla = async (neblla) => {
     game.failed = e.code || e.message;
     $('loading').hidden = true;
     $('failed').hidden = false;
-    $('failed').textContent = e.code === 'feature_disabled'
-      ? 'Este juego necesita el módulo Mundo encendido.'
-      : 'No se pudo preparar el parque (' + (e.code || e.message) + '). Recarga la página.';
+    const showFailed = () => { $('failed').textContent = e.code === 'feature_disabled' ? tr('needWorld') : tr('failed', { code: e.code || e.message }); };
+    showFailed();
+    window.nebllaLang.on(showFailed);
   }
 };
 
@@ -114,7 +118,7 @@ async function setUp(neblla, game) {
   try { look = await neblla.avatar.get(); } catch { /* sin conexión: el de por defecto */ }
   const myDoll = await world.avatar(look || {});
   if (!look || look.default) $('dollHint').hidden = false;
-  const you = { id: 'you', name: 'Tú', you: true, doll: myDoll, thing: world.add({ doll: myDoll, position: [0, 1, 4] }) };
+  const you = { id: 'you', name: 'you', you: true, doll: myDoll, thing: world.add({ doll: myDoll, position: [0, 1, 4] }) };
   world.control(you.thing);
   game.players.push(you);
   for (const r of RIVALS) {
@@ -129,15 +133,16 @@ async function setUp(neblla, game) {
     el.textContent = text; el.hidden = false;
     clearTimeout(shout.t); shout.t = setTimeout(() => { el.hidden = true; }, 1600);
   };
+  const renderIt = () => { if (game.it) $('itName').textContent = nm(game.it); };
   const giveIt = (to, from) => {
     game.it = to;
     to.since = world.time;               // se queda quieto contando un momento
     to.noBack = from ? { id: from.id, until: world.time + NO_BACK } : null;
-    $('itName').textContent = to.name;
+    renderIt();
     $('itBox').style.setProperty('--who', to.color);
-    if (to.you) shout(from ? '¡Te ha pillado ' + from.name + '! La llevas tú' : '¡La llevas tú!');
-    else if (from && from.you) shout('¡Se la pasaste a ' + to.name + '!');
-    else shout(to.name + ' la lleva');
+    if (to.you) shout(from ? tr('tagged', { name: nm(from) }) : tr('youIt'));
+    else if (from && from.you) shout(tr('passed', { name: nm(to) }));
+    else shout(tr('nameIt', { name: nm(to) }));
   };
 
   const place = () => {
@@ -158,6 +163,7 @@ async function setUp(neblla, game) {
     game.playing = true;
     game.ends = world.time + ROUND;
     game.results = null;
+    game.end = null;
     // Empieza un rival: primero, a correr.
     giveIt(game.players[1 + Math.floor(random() * RIVALS.length)], null);
     $('start').hidden = true; $('end').hidden = true; $('itBox').hidden = false;
@@ -175,23 +181,31 @@ async function setUp(neblla, game) {
     loser.doll.play('sit-down');
     const me = game.players[0];
     const won = table[0] === me;
-    $('endTitle').textContent = won ? '¡Has ganado!' : me === loser ? '¡Te ha pillado el silbato!' : '¡Silbato!';
-    $('endText').textContent = me === loser
-      ? 'La llevabas tú al final. La próxima, corre más.'
-      : 'La has llevado ' + fmt(me.held) + '. ' + (won ? 'Nadie la llevó menos que tú.' : 'Ha ganado ' + table[0].name + ', que la llevó ' + fmt(table[0].held) + '.');
-    const ol = $('table'); ol.textContent = '';
-    for (const r of game.results) {
-      const li = document.createElement('li');
-      li.textContent = r.name + ' — ' + (r.lost ? 'la llevaba al final' : fmt(r.held));
-      if (r.id === 'you') li.className = 'me';
-      ol.append(li);
-    }
+    game.end = { won, lost: me === loser, me, winner: table[0] };
+    renderEnd();
     $('end').hidden = false;
     // Tu mejor marca: la menor que llevaste sin perder.
     const saved = neblla.db.data || {};
     const best = me === loser ? saved.best : Math.min(saved.best ?? Infinity, Math.round(me.held * 10) / 10);
     neblla.db.save({ best: Number.isFinite(best) ? best : null, games: (saved.games || 0) + 1, wins: (saved.wins || 0) + (won ? 1 : 0) }).catch(() => {});
     showBest();
+  };
+
+  // El texto del final se pinta aparte para repintarlo si cambia el idioma.
+  const renderEnd = () => {
+    const e = game.end;
+    if (!e) return;
+    $('endTitle').textContent = e.won ? tr('won') : e.lost ? tr('lostWhistle') : tr('whistle');
+    $('endText').textContent = e.lost ? tr('endLost')
+      : e.won ? tr('endWon', { time: fmt(e.me.held) })
+      : tr('endOther', { time: fmt(e.me.held), name: nm(e.winner), winTime: fmt(e.winner.held) });
+    const ol = $('table'); ol.textContent = '';
+    for (const r of game.results) {
+      const li = document.createElement('li');
+      li.textContent = (r.id === 'you' ? tr('you') : r.name) + ' — ' + (r.lost ? tr('lastIt') : fmt(r.held));
+      if (r.id === 'you') li.className = 'me';
+      ol.append(li);
+    }
   };
 
   // Cómo piensa un rival: si la lleva, persigue al más cercano (un poco más a ti);
@@ -268,9 +282,13 @@ async function setUp(neblla, game) {
     const d = neblla.db.data || {};
     if (!d.games) return;
     $('best').hidden = false;
-    $('best').textContent = 'Partidas: ' + d.games + ' · ganadas: ' + (d.wins || 0) + (d.best != null ? ' · tu mejor marca: ' + fmt(d.best) : '');
+    const v = { games: d.games, wins: d.wins || 0 };
+    $('best').textContent = d.best != null ? tr('statsBest', { ...v, time: fmt(d.best) }) : tr('stats', v);
   };
   showBest();
+  const meta = document.querySelector('meta[name=description]');
+  window.nebllaLang.on(() => { renderIt(); renderEnd(); showBest(); if (meta) meta.content = tr('desc'); if (game.playing) $('mine').textContent = fmt(game.players[0].held); });
+  if (meta) meta.content = tr('desc');
 
   $('playBtn').addEventListener('click', () => game.start());
   $('againBtn').addEventListener('click', () => game.start());
