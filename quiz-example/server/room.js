@@ -1,7 +1,9 @@
 // server/room.js — la partida de Preguntón. Corre en el servidor de la sala
 // (Fog: unos dispositivos de la sala, nunca la pantalla). Aquí se decide
 // todo: qué pregunta toca, cuándo se cierra, quién acierta y cuántos puntos
-// gana. Los clientes solo piden y pintan el estado.
+// gana. Los clientes solo piden y pintan el estado. Este fichero no manda
+// ningún texto propio (los clientes escriben cada fase en su idioma); solo
+// reenvía lo que escribió quien dirige: título, pregunta y respuestas.
 //
 // Puntos: acertar da 500, más hasta 500 según lo rápido (500 + 500 × el
 // tiempo que quedaba / el tiempo de la pregunta). El tiempo de cada uno es
@@ -59,7 +61,7 @@ function grade(right) {
     const ms = Math.max(0, Math.min(total, a.time - s.startedAt));
     const ok = v === right;
     const gained = ok ? Math.round(500 + 500 * (1 - ms / total)) : 0;
-    const p = players[id] || { name: nameOf(id) || 'Alguien', points: 0, right: 0 };
+    const p = players[id] || { name: nameOf(id) || null, points: 0, right: 0 };
     players[id] = { name: nameOf(id) || p.name, points: p.points + gained, right: p.right + (ok ? 1 : 0) };
     last[id] = { ok, ms, gained, option: v };
   }

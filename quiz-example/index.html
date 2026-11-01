@@ -10,64 +10,66 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Nunito:wght@400;700;800&display=swap">
   <link rel="stylesheet" href="main.css" />
   <script src="https://neblla.com/connect/app.js"></script>
+  <script src="https://neblla.com/connect/lang.js"></script>
 </head>
 <body>
 
   <header class="top">
-    <a class="logo" href="./" id="logo"><span class="logo-mark">?</span>Preguntón</a>
+    <a class="logo" href="./" id="logo"><span class="logo-mark">?</span><span data-i18n="brand">Preguntón</span></a>
     <div class="top-right">
+      <div data-neblla-lang-switcher class="lang-slot"></div>
       <span id="whoChip" class="chip" hidden></span>
-      <button id="loginBtn" class="btn btn-small" type="button" hidden>Entrar</button>
-      <button id="logoutBtn" class="btn btn-small btn-ghost" type="button" hidden>Salir</button>
+      <button id="loginBtn" class="btn btn-small" type="button" data-i18n="login" hidden>Login</button>
+      <button id="logoutBtn" class="btn btn-small btn-ghost" type="button" data-i18n="logout" hidden>Logout</button>
     </div>
   </header>
 
   <main id="app">
-    <p id="connecting" class="center muted">Conectando…</p>
+    <p id="connecting" class="center muted" data-i18n="connecting">Conectando…</p>
 
     <!-- Portada: quien llega sin sala -->
     <section id="vHome" class="view" hidden>
-      <p class="notice" id="exampleNotice">Esto es una app de ejemplo de <a href="https://neblla.com" target="_blank" rel="noopener">Neblla</a>: pruébala con tus amigos, no guarda nada importante.</p>
+      <p class="notice" id="exampleNotice" data-i18n-html="example_notice">Esto es una app de ejemplo de <a href="https://neblla.com" target="_blank" rel="noopener">Neblla</a>: pruébala con tus amigos, no guarda nada importante.</p>
 
       <div id="homeGuest">
         <div class="hero">
-          <h1>Concursos en clase, en la tele y con los móviles</h1>
-          <p>Escribes tus preguntas, las pones en la pantalla grande y todos contestan desde su móvil. Gana quien acierta más y más rápido.</p>
+          <h1 data-i18n="home_title">Concursos en clase, en la tele y con los móviles</h1>
+          <p data-i18n="home_text">Escribes tus preguntas, las pones en la pantalla grande y todos contestan desde su móvil. Gana quien acierta más y más rápido.</p>
         </div>
         <div class="cards two">
           <div class="card">
-            <h2>¿Tienes un código?</h2>
+            <h2 data-i18n="code_title">¿Tienes un código?</h2>
             <form id="codeForm" class="row">
               <input id="codeInput" class="input code-input" placeholder="ABCDE" maxlength="12" autocomplete="off" autocapitalize="characters">
-              <button class="btn" type="submit">Entrar</button>
+              <button class="btn" type="submit" data-i18n="code_join">Unirme</button>
             </form>
-            <p class="muted small">Te lo da quien dirige el concurso. No hace falta cuenta.</p>
+            <p class="muted small" data-i18n="code_hint">Te lo da quien dirige el concurso. No hace falta cuenta.</p>
           </div>
           <div class="card">
-            <h2>¿Diriges el concurso?</h2>
-            <button id="loginBig" class="btn btn-wide" type="button">Entrar para crear tus preguntas</button>
-            <button id="demoBtn" class="btn btn-ghost btn-wide" type="button">Probar sin cuenta con un concurso de ejemplo</button>
+            <h2 data-i18n="lead_title">¿Diriges el concurso?</h2>
+            <button id="loginBig" class="btn btn-wide" type="button" data-i18n="lead_login">Login para crear tus preguntas</button>
+            <button id="demoBtn" class="btn btn-ghost btn-wide" type="button" data-i18n="lead_demo">Probar sin cuenta con un concurso de ejemplo</button>
           </div>
         </div>
       </div>
 
       <div id="homeTeacher" hidden>
         <div class="list-head">
-          <h1>Tus cuestionarios</h1>
-          <button id="newQuizBtn" class="btn" type="button">＋ Nuevo cuestionario</button>
+          <h1 data-i18n="quizzes_title">Tus cuestionarios</h1>
+          <button id="newQuizBtn" class="btn" type="button" data-i18n="quizzes_new">＋ Nuevo cuestionario</button>
         </div>
         <div id="quizList" class="quiz-list"></div>
         <div id="quizEmpty" class="card empty" hidden>
-          <h2>Aún no tienes cuestionarios</h2>
-          <p class="muted">Crea el primero, o empieza con uno de ejemplo y cámbialo a tu gusto.</p>
+          <h2 data-i18n="empty_title">Aún no tienes cuestionarios</h2>
+          <p class="muted" data-i18n="empty_text">Crea el primero, o empieza con uno de ejemplo y cámbialo a tu gusto.</p>
           <div class="row">
-            <button id="firstQuizBtn" class="btn" type="button">Crear el primero</button>
-            <button id="copyDemoBtn" class="btn btn-ghost" type="button">Empezar con uno de ejemplo</button>
+            <button id="firstQuizBtn" class="btn" type="button" data-i18n="empty_first">Crear el primero</button>
+            <button id="copyDemoBtn" class="btn btn-ghost" type="button" data-i18n="empty_demo">Empezar con uno de ejemplo</button>
           </div>
         </div>
         <form id="joinSmall" class="row join-small">
-          <input id="codeInput2" class="input code-input" placeholder="Código" maxlength="12" autocomplete="off" autocapitalize="characters">
-          <button class="btn btn-ghost" type="submit">Entrar a una sala</button>
+          <input id="codeInput2" class="input code-input" placeholder="Código" data-i18n-placeholder="join_small_placeholder" maxlength="12" autocomplete="off" autocapitalize="characters">
+          <button class="btn btn-ghost" type="submit" data-i18n="join_small_go">Unirme a una sala</button>
         </form>
       </div>
     </section>
@@ -79,15 +81,15 @@
           <h1 id="editorTitle">Nuevo cuestionario</h1>
         </div>
         <label class="field">
-          <span>Título</span>
-          <input id="quizTitle" class="input" maxlength="80" placeholder="Capitales del mundo" required>
+          <span data-i18n="field_title">Título</span>
+          <input id="quizTitle" class="input" maxlength="80" placeholder="Capitales del mundo" data-i18n-placeholder="field_title_placeholder" required>
         </label>
         <div id="questions"></div>
-        <button id="addQuestion" class="btn btn-ghost btn-wide" type="button">＋ Añadir pregunta</button>
+        <button id="addQuestion" class="btn btn-ghost btn-wide" type="button" data-i18n="question_add">＋ Añadir pregunta</button>
         <p id="editorError" class="error" hidden></p>
         <div class="row sticky-actions">
-          <button id="cancelEdit" class="btn btn-ghost" type="button">Cancelar</button>
-          <button class="btn" type="submit">Guardar</button>
+          <button id="cancelEdit" class="btn btn-ghost" type="button" data-i18n="cancel">Cancelar</button>
+          <button class="btn" type="submit" data-i18n="save">Guardar</button>
         </div>
       </form>
     </section>
@@ -95,14 +97,14 @@
     <!-- Un dispositivo que entra en una sala -->
     <section id="vJoin" class="view" hidden>
       <div class="card join-card">
-        <p class="muted">Sala</p>
+        <p class="muted" data-i18n="join_room">Sala</p>
         <p class="big-code" id="joinCode">·····</p>
-        <h2>¿Cómo te llamas?</h2>
+        <h2 data-i18n="join_name">¿Cómo te llamas?</h2>
         <form id="nameForm" class="row">
-          <input id="nameInput" class="input" maxlength="24" placeholder="Tu nombre" autocomplete="nickname" required>
-          <button class="btn" type="submit">¡A jugar!</button>
+          <input id="nameInput" class="input" maxlength="24" placeholder="Tu nombre" data-i18n-placeholder="join_name_placeholder" autocomplete="nickname" required>
+          <button class="btn" type="submit" data-i18n="join_go">¡A jugar!</button>
         </form>
-        <p class="muted small" id="screenHint">¿Es la pantalla de la clase (la tele, el proyector)? No escribas nada: quien dirige la elige desde su móvil.</p>
+        <p class="muted small" id="screenHint" data-i18n="join_screen">¿Es la pantalla de la clase (la tele, el proyector)? No escribas nada: quien dirige la elige desde su móvil.</p>
       </div>
     </section>
 
@@ -111,26 +113,26 @@
       <div id="mLobby">
         <div class="card share">
           <div class="share-text">
-            <p class="muted">Código de la sala</p>
+            <p class="muted" data-i18n="room_code">Código de la sala</p>
             <p class="big-code" id="mCode">·····</p>
             <p class="link-line" id="mLink"></p>
             <div class="row">
-              <button id="shareBtn" class="btn" type="button">Compartir</button>
-              <button id="copyBtn" class="btn btn-ghost" type="button">Copiar enlace</button>
+              <button id="shareBtn" class="btn" type="button" data-i18n="share">Compartir</button>
+              <button id="copyBtn" class="btn btn-ghost" type="button" data-i18n="copylink">Copiar enlace</button>
             </div>
           </div>
           <img id="mQr" class="qr" alt="QR para entrar en la sala" width="150" height="150">
         </div>
         <div class="card" id="mDevicesCard">
-          <h2>Dispositivos en la sala</h2>
-          <p class="muted small" id="mDevicesHint">Abre el enlace en la tele o el proyector y elígela aquí como pantalla.</p>
+          <h2 data-i18n="devices_title">Dispositivos en la sala</h2>
+          <p class="muted small" id="mDevicesHint" data-i18n="devices_hint">Abre el enlace en la tele o el proyector y elígela aquí como pantalla.</p>
           <ul id="mDevices" class="devices"></ul>
         </div>
         <div class="card">
-          <h2>Jugadores <span id="mCount" class="pill">0</span></h2>
+          <h2><span data-i18n="players_title">Jugadores</span> <span id="mCount" class="pill">0</span></h2>
           <div id="mPlayers" class="names"></div>
         </div>
-        <button id="startBtn" class="btn btn-wide btn-big" type="button" disabled>Empezar</button>
+        <button id="startBtn" class="btn btn-wide btn-big" type="button" data-i18n="start" disabled>Empezar</button>
       </div>
       <div id="mGame" hidden>
         <p class="muted" id="mStep"></p>
@@ -139,7 +141,7 @@
         <ol id="mOptions" class="m-options"></ol>
         <button id="mAction" class="btn btn-wide btn-big" type="button"></button>
         <details class="m-more">
-          <summary>Pantalla y dispositivos</summary>
+          <summary data-i18n="more">Pantalla y dispositivos</summary>
           <ul id="mDevices2" class="devices"></ul>
         </details>
       </div>
@@ -149,9 +151,9 @@
     <section id="vBoard" class="view" hidden>
       <div id="bLobby" class="b-lobby">
         <div class="b-join">
-          <p class="b-kicker">Entra a jugar</p>
+          <p class="b-kicker" data-i18n="b_kicker">Entra a jugar</p>
           <p class="b-link" id="bLink"></p>
-          <p class="b-code-label">o con el código</p>
+          <p class="b-code-label" data-i18n="b_or">o con el código</p>
           <p class="big-code huge" id="bCode">·····</p>
         </div>
         <img id="bQr" class="qr big" alt="QR para entrar" width="260" height="260">
@@ -185,7 +187,7 @@
         <p class="p-question" id="pQuestion"></p>
         <div id="pButtons" class="pad"></div>
       </div>
-      <p class="leave-line"><button id="leaveBtn" class="link" type="button">Salir de la sala</button></p>
+      <p class="leave-line"><button id="leaveBtn" class="link" type="button" data-i18n="leave">Salir de la sala</button></p>
     </section>
   </main>
 

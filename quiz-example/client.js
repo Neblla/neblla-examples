@@ -10,32 +10,46 @@
 // Las respuestas van en sobres (neblla.tools.envelope): nadie las ve antes
 // de que se cierre la pregunta, tampoco el móvil que hace de servidor. La
 // buena solo la tiene el móvil de la profe, que la manda al cerrarse.
+//
+// Idiomas: la pantalla de cada dispositivo sale en su idioma (lang/*.json).
+// El servidor (room.js) no manda textos: manda el estado (fases, números) y
+// cada cliente lo escribe en su idioma. Lo único que viaja como texto es lo
+// que escribió quien dirige (título, preguntas, respuestas): sale tal cual,
+// en el idioma en que se escribió. El cuestionario de ejemplo vive en
+// lang/<idioma>.json (claves demo_*): al copiarlo, la profe se lo queda en el
+// idioma que tenía su pantalla en ese momento.
 
-const DEMO = {
-  id: 'demo',
-  title: 'Capitales y curiosidades',
-  questions: [
-    { text: '¿Cuál es la capital de Australia?', options: ['Sídney', 'Canberra', 'Melbourne', 'Perth'], right: 1, seconds: 20 },
-    { text: '¿Cuántas patas tiene una araña?', options: ['6', '8', '10'], right: 1, seconds: 15 },
-    { text: '¿Qué planeta es el más grande del sistema solar?', options: ['Saturno', 'Neptuno', 'Júpiter', 'La Tierra'], right: 2, seconds: 20 },
-    { text: 'El agua hierve a 100 °C a nivel del mar.', options: ['Verdadero', 'Falso'], right: 0, seconds: 10 },
-    { text: '¿En qué continente está Marruecos?', options: ['Asia', 'Europa', 'África', 'América'], right: 2, seconds: 15 },
-  ],
-};
 const SHAPES = ['▲', '◆', '●', '■'];
 const SECONDS = [10, 15, 20, 30, 45, 60];
+// Cuántas respuestas tiene cada pregunta del ejemplo y cuál es la buena (igual en todos los idiomas).
+const DEMO_SHAPE = [{ n: 4, right: 1, seconds: 20 }, { n: 3, right: 1, seconds: 15 }, { n: 4, right: 2, seconds: 20 }, { n: 2, right: 0, seconds: 10 }, { n: 4, right: 2, seconds: 15 }];
 
-window.onNeblla = (neblla) => {
+window.onNeblla = async (neblla) => {
+  await nebllaLang.ready;
+  const T = (k, v) => nebllaLang.t(k, v);
   const $ = (id) => document.getElementById(id);
   const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
-  const fmtS = (ms) => (ms / 1000).toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' s';
-  const fmtN = (n) => Number(n || 0).toLocaleString('es-ES');
-  const ordinal = (i) => (i + 1) + '.º';
+  const fmtS = (ms) => T('sec', { n: new Intl.NumberFormat(nebllaLang.lang, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(ms / 1000) });
+  const fmtN = (n) => new Intl.NumberFormat(nebllaLang.lang).format(Number(n || 0));
+  const fmtI = (n) => new Intl.NumberFormat(nebllaLang.lang, { useGrouping: false }).format(Number(n || 0));
+  const errOf = (e) => (e && (e.code || e.message)) || '';
   let toastTimer = null;
   const toast = (text) => {
     const t = $('toast'); t.textContent = text; t.hidden = false;
     clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 3500);
   };
+
+  /** El cuestionario de ejemplo, en el idioma activo. */
+  const demoQuiz = (id) => ({
+    id,
+    title: T('demo_title'),
+    questions: DEMO_SHAPE.map((s, i) => ({
+      text: T('demo_q' + (i + 1) + '_text'),
+      options: Array.from({ length: s.n }, (_, k) => T('demo_q' + (i + 1) + '_o' + (k + 1))),
+      right: s.right,
+      seconds: s.seconds,
+    })),
+  });
 
   let isLobby = true;
   let editing = null;          // el cuestionario abierto en el editor
@@ -49,7 +63,7 @@ window.onNeblla = (neblla) => {
   const me = () => neblla.room.me || {};
   const isPlayer = (u) => !!u && !u.isBoard && !u.isMaster && !!(u.publicInfo && u.publicInfo.name);
   const players = () => neblla.room.users.filter(isPlayer);
-  const quizOfLive = () => { const l = live(); if (!l) return null; return l.quizId === 'demo' ? DEMO : quizzes().find(q => q.id === l.quizId) || null; };
+  const quizOfLive = () => { const l = live(); if (!l) return null; return l.quizId === 'demo' ? demoQuiz('demo') : quizzes().find(q => q.id === l.quizId) || null; };
 
   // ── Qué se ve en este dispositivo ─────────────────────────────────
   function show() {
@@ -63,6 +77,9 @@ window.onNeblla = (neblla) => {
     else v = 'vJoin';
     for (const id of ['vHome', 'vEditor', 'vJoin', 'vMaster', 'vBoard', 'vPlayer']) $(id).hidden = id !== v;
     document.body.dataset.view = v;
+    document.title = T('doc_title');
+    $('mQr').alt = $('bQr').alt = T('qr_alt');
+    $('editorTitle').textContent = editing && editing.id ? T('editor_edit') : T('editor_new');
     renderAuth();
     if (v === 'vHome') renderHome();
     if (v === 'vJoin') renderJoin();
@@ -81,7 +98,7 @@ window.onNeblla = (neblla) => {
     $('logoutBtn').hidden = !logged || inRoom;
     const name = neblla.auth.me.publicInfo && neblla.auth.me.publicInfo.name;
     $('whoChip').hidden = !logged || inRoom;
-    $('whoChip').textContent = name || 'Tu cuenta';
+    $('whoChip').textContent = name || T('account');
   }
 
   // ── Portada y lista de cuestionarios ──────────────────────────────
@@ -97,12 +114,12 @@ window.onNeblla = (neblla) => {
     for (const q of qs) {
       const card = el('div', 'card quiz');
       const info = el('div', 'quiz-info');
-      info.append(el('h2', null, q.title), el('p', 'muted small', q.questions.length + (q.questions.length === 1 ? ' pregunta' : ' preguntas')));
+      info.append(el('h2', null, q.title), el('p', 'muted small', T('quiz_count', { n: q.questions.length })));
       const actions = el('div', 'row');
-      const play = el('button', 'btn', 'Jugar'); play.type = 'button'; play.onclick = () => play_(q);
-      const edit = el('button', 'btn btn-ghost', 'Editar'); edit.type = 'button'; edit.onclick = () => openEditor(q);
-      const del = el('button', 'btn btn-ghost btn-danger', 'Borrar'); del.type = 'button';
-      del.onclick = () => { if (confirm('¿Borrar «' + q.title + '»?')) saveQuizzes(quizzes().filter(x => x.id !== q.id)); };
+      const play = el('button', 'btn', T('play')); play.type = 'button'; play.onclick = () => play_(q);
+      const edit = el('button', 'btn btn-ghost', T('edit')); edit.type = 'button'; edit.onclick = () => openEditor(q);
+      const del = el('button', 'btn btn-ghost btn-danger', T('delete')); del.type = 'button';
+      del.onclick = () => { if (confirm(T('delete_confirm', { title: q.title }))) saveQuizzes(quizzes().filter(x => x.id !== q.id)); };
       actions.append(play, edit, del);
       card.append(info, actions);
       list.appendChild(card);
@@ -110,20 +127,20 @@ window.onNeblla = (neblla) => {
   }
 
   function saveQuizzes(list) {
-    neblla.db.save({ quizzes: list }, { now: true }).catch(e => toast('No se pudo guardar: ' + (e.code || e.message)));
+    neblla.db.save({ quizzes: list }, { now: true }).catch(e => toast(T('err_save', { err: errOf(e) })));
     renderHome();
   }
 
-  $('loginBtn').onclick = $('loginBig').onclick = () => neblla.auth.login().catch(() => toast('No se pudo entrar. Prueba otra vez.'));
+  $('loginBtn').onclick = $('loginBig').onclick = () => neblla.auth.login().catch(() => toast(T('err_login')));
   $('logoutBtn').onclick = () => neblla.auth.logout();
   neblla.auth.on('login', () => show());
   neblla.auth.on('logout', () => { view = 'home'; show(); });
-  neblla.auth.on('error', (e) => { if (e.code === 'popup_blocked') toast('El navegador bloqueó la ventana para entrar: permite las ventanas emergentes.'); });
+  neblla.auth.on('error', (e) => { if (e.code === 'popup_blocked') toast(T('err_popup')); });
   neblla.db.on('merged', () => { if (isLobby && view === 'home') renderHome(); });
 
   $('newQuizBtn').onclick = $('firstQuizBtn').onclick = () => openEditor(null);
-  $('copyDemoBtn').onclick = () => saveQuizzes([...quizzes(), { ...JSON.parse(JSON.stringify(DEMO)), id: newId() }]);
-  $('demoBtn').onclick = () => play_(DEMO);
+  $('copyDemoBtn').onclick = () => saveQuizzes([...quizzes(), demoQuiz(newId())]);
+  $('demoBtn').onclick = () => play_(demoQuiz('demo'));
   const joinCode = (input) => (e) => {
     e.preventDefault();
     const code = $(input).value.trim().toUpperCase();
@@ -132,7 +149,7 @@ window.onNeblla = (neblla) => {
   $('codeForm').onsubmit = joinCode('codeInput');
   $('joinSmall').onsubmit = joinCode('codeInput2');
   neblla.rooms.on('joinError', (e) => {
-    toast(e.code === 'room_full' ? 'La sala está llena.' : 'No hay ninguna sala con ese código. Revísalo.');
+    toast(e.code === 'room_full' ? T('err_full') : T('err_noroom'));
     if (live() && e.room === live().room) neblla.db.save({ live: null });
   });
 
@@ -141,7 +158,6 @@ window.onNeblla = (neblla) => {
   // ── El editor ─────────────────────────────────────────────────────
   function openEditor(q) {
     editing = q ? JSON.parse(JSON.stringify(q)) : { id: null, title: '', questions: [{ text: '', options: ['', '', '', ''], right: 0, seconds: 20 }] };
-    $('editorTitle').textContent = q ? 'Editar cuestionario' : 'Nuevo cuestionario';
     $('quizTitle').value = editing.title;
     $('editorError').hidden = true;
     renderQuestions();
@@ -168,33 +184,33 @@ window.onNeblla = (neblla) => {
     editing.questions.forEach((q, i) => {
       const card = el('div', 'card question');
       const head = el('div', 'q-head');
-      head.append(el('b', null, 'Pregunta ' + (i + 1)));
+      head.append(el('b', null, T('question_n', { n: i + 1 })));
       const sec = el('select', 'input input-small');
-      for (const s of SECONDS) { const o = el('option', null, s + ' s'); o.value = s; if (s === q.seconds) o.selected = true; sec.appendChild(o); }
-      sec.title = 'Tiempo para contestar';
-      const del = el('button', 'link', 'Quitar'); del.type = 'button';
+      for (const s of SECONDS) { const o = el('option', null, T('sec', { n: fmtI(s) })); o.value = s; if (s === q.seconds) o.selected = true; sec.appendChild(o); }
+      sec.title = T('time_title');
+      const del = el('button', 'link', T('remove')); del.type = 'button';
       del.onclick = () => { readEditor(); editing.questions.splice(i, 1); renderQuestions(); };
       del.hidden = editing.questions.length === 1;
       head.append(sec, del);
-      const text = el('textarea', 'input'); text.rows = 2; text.maxLength = 160; text.placeholder = '¿Cuál es la capital de Australia?'; text.value = q.text;
+      const text = el('textarea', 'input'); text.rows = 2; text.maxLength = 160; text.placeholder = T('question_placeholder'); text.value = q.text;
       const opts = el('div', 'opts');
       for (let k = 0; k < 4; k++) {
         const row = el('label', 'opt c' + k);
-        const radio = el('input'); radio.type = 'radio'; radio.name = 'right' + i; radio.value = k; radio.checked = q.right === k; radio.title = 'La buena';
+        const radio = el('input'); radio.type = 'radio'; radio.name = 'right' + i; radio.value = k; radio.checked = q.right === k; radio.title = T('right_title');
         const shape = el('span', 'shape', SHAPES[k]);
         const input = el('input', 'input'); input.type = 'text'; input.maxLength = 60; input.value = q.options[k] || '';
-        input.placeholder = k < 2 ? 'Respuesta ' + (k + 1) : 'Respuesta ' + (k + 1) + ' (opcional)';
+        input.placeholder = T(k < 2 ? 'answer_n' : 'answer_optional', { n: fmtI(k + 1) });
         row.append(radio, shape, input);
         opts.appendChild(row);
       }
-      card.append(head, text, opts, el('p', 'muted small', 'Marca la respuesta buena. Entre 2 y 4 respuestas.'));
+      card.append(head, text, opts, el('p', 'muted small', T('editor_help')));
       box.appendChild(card);
     });
   }
 
   $('addQuestion').onclick = () => {
     readEditor();
-    if (editing.questions.length >= 30) return toast('Como mucho, 30 preguntas.');
+    if (editing.questions.length >= 30) return toast(T('err_max'));
     editing.questions.push({ text: '', options: ['', '', '', ''], right: 0, seconds: 20 });
     renderQuestions();
     $('questions').lastChild.querySelector('textarea').focus();
@@ -204,15 +220,15 @@ window.onNeblla = (neblla) => {
   /** El cuestionario tal cual se guarda: sin respuestas vacías, la buena reindexada. */
   function clean(q) {
     const title = q.title.trim();
-    if (!title) return { error: 'Ponle un título.' };
+    if (!title) return { error: T('err_notitle') };
     const questions = [];
     for (const [i, x] of q.questions.entries()) {
       const text = x.text.trim();
       const kept = x.options.map((o, k) => ({ o: o.trim(), k })).filter(a => a.o);
-      if (!text) return { error: 'A la pregunta ' + (i + 1) + ' le falta el texto.' };
-      if (kept.length < 2) return { error: 'La pregunta ' + (i + 1) + ' necesita al menos dos respuestas.' };
+      if (!text) return { error: T('err_notext', { n: fmtI(i + 1) }) };
+      if (kept.length < 2) return { error: T('err_two', { n: fmtI(i + 1) }) };
       const right = kept.findIndex(a => a.k === x.right);
-      if (right < 0) return { error: 'En la pregunta ' + (i + 1) + ', la respuesta marcada como buena está vacía.' };
+      if (right < 0) return { error: T('err_emptyright', { n: fmtI(i + 1) }) };
       questions.push({ text, options: kept.map(a => a.o), right, seconds: x.seconds });
     }
     return { quiz: { id: q.id || newId(), title, questions, updatedAt: Date.now() } };
@@ -229,7 +245,7 @@ window.onNeblla = (neblla) => {
     view = 'home';
     saveQuizzes(list);
     show();
-    toast('Guardado');
+    toast(T('saved'));
   };
 
   // ── Jugar: reservar la sala y quedarse los mandos ─────────────────
@@ -241,7 +257,7 @@ window.onNeblla = (neblla) => {
       await neblla.db.save({ live: { room: code, pass, quizId: quiz.id } }, { now: true }).catch(() => {});
       await neblla.rooms.join(code);
     } catch (e) {
-      toast('No se pudo abrir la sala: ' + (e.code || e.message));
+      toast(T('err_book', { err: errOf(e) }));
     }
   }
 
@@ -270,6 +286,8 @@ window.onNeblla = (neblla) => {
     sentRight = s.n;
     neblla.message.to('server', { type: 'right', n: s.n, right: q.right });
   }, { final: true });
+  // Si cambia el idioma de la pantalla, se repinta lo que escribe el código.
+  nebllaLang.on(() => show());
 
   $('nameForm').onsubmit = (e) => {
     e.preventDefault();
@@ -289,26 +307,26 @@ window.onNeblla = (neblla) => {
   const link = () => neblla.rooms.link(neblla.room.name);
   $('shareBtn').onclick = async () => {
     const url = link();
-    const text = 'Entra al concurso con el código ' + neblla.room.name;
-    if (navigator.share) { try { await navigator.share({ title: 'Preguntón', text, url }); } catch {} return; }
+    const text = T('share_text', { code: neblla.room.name });
+    if (navigator.share) { try { await navigator.share({ title: T('brand'), text, url }); } catch {} return; }
     copy(url);
   };
   $('copyBtn').onclick = () => copy(link());
   function copy(text) {
-    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast('Enlace copiado'), () => toast(text));
+    (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject()).then(() => toast(T('copied')), () => toast(text));
   }
 
   function renderDevices(list) {
     list.innerHTML = '';
     const others = neblla.room.users.filter(u => !u.isMe);
-    if (!others.length) list.appendChild(el('li', 'muted small', 'Aún no hay nadie más.'));
+    if (!others.length) list.appendChild(el('li', 'muted small', T('devices_none')));
     for (const u of others) {
       const li = el('li', 'device' + (u.isBoard ? ' on' : ''));
       const name = u.publicInfo && u.publicInfo.name;
-      li.append(el('span', 'device-icon', u.isBoard ? '📺' : name ? '📱' : '🖥️'), el('span', 'device-name', u.isBoard ? 'Pantalla' + (name ? ' (' + name + ')' : '') : name || 'Dispositivo sin nombre'));
-      const b = el('button', 'btn btn-small' + (u.isBoard ? ' btn-ghost' : ''), u.isBoard ? 'Quitar' : 'Usar como pantalla');
+      li.append(el('span', 'device-icon', u.isBoard ? '📺' : name ? '📱' : '🖥️'), el('span', 'device-name', u.isBoard ? (name ? T('device_screen_named', { name }) : T('device_screen')) : name || T('device_unnamed')));
+      const b = el('button', 'btn btn-small' + (u.isBoard ? ' btn-ghost' : ''), u.isBoard ? T('remove') : T('device_use'));
       b.type = 'button';
-      b.onclick = () => neblla.room.setBoard(u.isBoard ? null : u.id).catch(e => toast('No se pudo: ' + (e.code || e.message)));
+      b.onclick = () => neblla.room.setBoard(u.isBoard ? null : u.id).catch(e => toast(T('err_generic', { err: errOf(e) })));
       li.appendChild(b);
       list.appendChild(li);
     }
@@ -330,9 +348,9 @@ window.onNeblla = (neblla) => {
       $('mQr').src = neblla.rooms.qr(neblla.room.name, { size: 300 });
       renderDevices($('mDevices'));
       const ps = players();
-      $('mCount').textContent = ps.length;
+      $('mCount').textContent = fmtN(ps.length);
       renderNames($('mPlayers'), ps);
-      if (!ps.length) $('mPlayers').appendChild(el('span', 'muted small', 'Cuando alguien entre con el enlace o el código, sale aquí.'));
+      if (!ps.length) $('mPlayers').appendChild(el('span', 'muted small', T('players_none')));
       $('startBtn').disabled = !ps.length;
       return;
     }
@@ -345,26 +363,26 @@ window.onNeblla = (neblla) => {
     action.disabled = false;
     $('mOptions').innerHTML = '';
     $('mInfo').textContent = '';
-    $('mStep').textContent = s.n >= 0 ? 'Pregunta ' + (s.n + 1) + ' de ' + total : (quiz ? quiz.title : '');
-    $('mQuestion').textContent = s.phase === 'ready' ? 'Preparados…' : s.phase === 'end' ? '¡Fin del concurso!' : (q ? q.text : (s.q && s.q.text) || '');
+    $('mStep').textContent = s.n >= 0 ? T('m_step', { n: fmtI(s.n + 1), total: fmtI(total) }) : (quiz ? quiz.title : '');
+    $('mQuestion').textContent = s.phase === 'ready' ? T('m_ready') : s.phase === 'end' ? T('m_end') : (q ? q.text : (s.q && s.q.text) || '');
     if (q && ['question', 'closing', 'closed', 'reveal', 'ranking'].includes(s.phase)) {
       q.options.forEach((o, i) => {
-        const li = el('li', 'c' + i + (i === q.right ? ' right' : ''));
+        const li = el('li', 'c' + i + (i === q.right ? ' right' : '')); li.dataset.tag = T('right_title');
         li.append(el('span', 'shape', SHAPES[i]), el('span', null, o));
-        if (s.counts) li.append(el('b', 'count', s.counts[i]));
+        if (s.counts) li.append(el('b', 'count', fmtN(s.counts[i])));
         $('mOptions').appendChild(li);
       });
     }
-    if (s.phase === 'ready') { action.textContent = 'Primera pregunta'; action.onclick = () => ask(0); if (quiz) ask(0); }
-    else if (s.phase === 'question') { action.textContent = 'Cerrar ya'; action.onclick = () => neblla.message.to('server', { type: 'close' }); renderClock(); }
-    else if (s.phase === 'closing' || s.phase === 'closed') { action.textContent = 'Corrigiendo…'; action.disabled = true; }
-    else if (s.phase === 'reveal') { action.textContent = 'Ver el ranking'; action.onclick = () => neblla.message.to('server', { type: 'ranking' }); }
+    if (s.phase === 'ready') { action.textContent = T('m_first'); action.onclick = () => ask(0); if (quiz) ask(0); }
+    else if (s.phase === 'question') { action.textContent = T('m_close'); action.onclick = () => neblla.message.to('server', { type: 'close' }); renderClock(); }
+    else if (s.phase === 'closing' || s.phase === 'closed') { action.textContent = T('m_grading'); action.disabled = true; }
+    else if (s.phase === 'reveal') { action.textContent = T('m_ranking'); action.onclick = () => neblla.message.to('server', { type: 'ranking' }); }
     else if (s.phase === 'ranking') {
       const last = s.n + 1 >= total;
-      action.textContent = last ? 'Ver el podio' : 'Siguiente pregunta';
+      action.textContent = last ? T('m_podium') : T('m_next');
       action.onclick = () => last ? neblla.message.to('server', { type: 'end' }) : ask(s.n + 1);
-    } else if (s.phase === 'end') { action.textContent = 'Terminar'; action.onclick = finish; }
-    if (!quiz) { $('mInfo').textContent = 'Este móvil no tiene el cuestionario de esta sala.'; action.hidden = true; }
+    } else if (s.phase === 'end') { action.textContent = T('m_finish'); action.onclick = finish; }
+    if (!quiz) { $('mInfo').textContent = T('m_noquiz'); action.hidden = true; }
   }
 
   let asked = -1;
@@ -373,7 +391,7 @@ window.onNeblla = (neblla) => {
     const q = quiz && quiz.questions[n];
     if (!q || asked === n) return;
     asked = n;
-    // La buena no viaja: solo el texto, las respuestas y el tiempo.
+    // La buena no viaja: solo el texto, las respuestas y el tiempo (tal cual los escribió quien dirige).
     neblla.message.to('server', { type: 'ask', n, total: quiz.questions.length, title: quiz.title, text: q.text, options: q.options, seconds: q.seconds });
   }
 
@@ -389,15 +407,15 @@ window.onNeblla = (neblla) => {
     const s = neblla.state.get();
     if (!s || s.phase !== 'question') return;
     const left = Math.max(0, Math.ceil((s.endsAt - neblla.room.now()) / 1000));
-    $('bClock').textContent = left;
+    $('bClock').textContent = fmtN(left);
     const n = players().length;
-    const txt = s.answered.length + ' de ' + n + (n === 1 ? ' ha contestado' : ' han contestado');
+    const txt = T('answered', { n, answered: fmtN(s.answered.length) });
     $('bAnswered').textContent = txt;
-    if (!$('vMaster').hidden) $('mInfo').textContent = left + ' s · ' + txt;
+    if (!$('vMaster').hidden) $('mInfo').textContent = T('sec', { n: fmtN(left) }) + ' · ' + txt;
   }
 
   // ── La pantalla ───────────────────────────────────────────────────
-  const ranked = (s) => Object.entries(s.players || {}).map(([id, p]) => ({ id, ...p, last: (s.last || {})[id] })).sort((a, b) => b.points - a.points);
+  const ranked = (s) => Object.entries(s.players || {}).map(([id, p]) => ({ id, ...p, name: p.name || T('someone'), last: (s.last || {})[id] })).sort((a, b) => b.points - a.points);
 
   function renderBoard() {
     const s = neblla.state.get();
@@ -411,17 +429,17 @@ window.onNeblla = (neblla) => {
       $('bTitle').textContent = (neblla.room.config && neblla.room.config.title) || '';
       const ps = players();
       renderNames($('bPlayers'), ps);
-      $('bWaiting').textContent = ps.length ? ps.length + (ps.length === 1 ? ' jugador' : ' jugadores') + ' · empezamos enseguida' : 'Esperando jugadores…';
+      $('bWaiting').textContent = ps.length ? T('b_waiting_count', { n: ps.length }) : T('b_waiting');
       return;
     }
-    $('bStep').textContent = s.n >= 0 ? 'Pregunta ' + (s.n + 1) + ' de ' + s.total : '';
+    $('bStep').textContent = s.n >= 0 ? T('m_step', { n: fmtI(s.n + 1), total: fmtI(s.total) }) : '';
     const opts = $('bOptions'), rank = $('bRanking'), podium = $('bPodium');
     opts.hidden = !['question', 'closing', 'closed', 'reveal'].includes(s.phase);
     rank.hidden = s.phase !== 'ranking';
     podium.hidden = s.phase !== 'end';
     $('bClock').hidden = s.phase !== 'question';
     $('bAnswered').hidden = s.phase !== 'question';
-    $('bQuestion').textContent = s.phase === 'ranking' ? 'Ranking' : s.phase === 'end' ? '¡Enhorabuena!' : s.q.text;
+    $('bQuestion').textContent = s.phase === 'ranking' ? T('b_ranking') : s.phase === 'end' ? T('b_congrats') : s.q.text;
     if (!opts.hidden) {
       opts.innerHTML = '';
       const max = Math.max(1, ...(s.counts || [0]));
@@ -430,7 +448,7 @@ window.onNeblla = (neblla) => {
         li.append(el('span', 'shape', SHAPES[i]), el('span', 'tile-text', o));
         if (s.phase === 'reveal') {
           const bar = el('span', 'tile-bar'); bar.style.setProperty('--w', (100 * s.counts[i] / max) + '%');
-          li.append(bar, el('b', 'tile-count', s.counts[i] + (i === s.right ? ' ✓' : '')));
+          li.append(bar, el('b', 'tile-count', fmtN(s.counts[i]) + (i === s.right ? ' ✓' : '')));
         }
         opts.appendChild(li);
       });
@@ -441,7 +459,8 @@ window.onNeblla = (neblla) => {
       ranked(s).slice(0, 8).forEach((p, i) => {
         const li = el('li', 'rank-row');
         const l = p.last;
-        li.append(el('span', 'rank-pos', ordinal(i)), el('span', 'rank-name', p.name), el('span', 'rank-last', l && l.ok ? '+' + fmtN(l.gained) + ' · ' + fmtS(l.ms) : l && l.ms != null ? 'falló · ' + fmtS(l.ms) : 'sin contestar'), el('b', 'rank-points', fmtN(p.points)));
+        const lastTxt = l && l.ok ? T('rank_ok', { gained: fmtN(l.gained), time: fmtS(l.ms) }) : l && l.ms != null ? T('rank_miss', { time: fmtS(l.ms) }) : T('rank_none');
+        li.append(el('span', 'rank-pos', fmtI(i + 1)), el('span', 'rank-name', p.name), el('span', 'rank-last', lastTxt), el('b', 'rank-points', fmtN(p.points)));
         rank.appendChild(li);
       });
     }
@@ -452,7 +471,7 @@ window.onNeblla = (neblla) => {
         const p = top[i];
         if (!p) return;
         const col = el('div', 'step s' + (i + 1));
-        col.append(el('span', 'step-name', p.name), el('span', 'step-points', fmtN(p.points) + ' pts'), el('span', 'step-block', ordinal(i)));
+        col.append(el('span', 'step-name', p.name), el('span', 'step-points', T('pts', { n: fmtN(p.points) })), el('span', 'step-block', fmtI(i + 1)));
         podium.appendChild(col);
       });
     }
@@ -465,7 +484,7 @@ window.onNeblla = (neblla) => {
     const m = me();
     $('pName').textContent = m.publicInfo.name;
     const p = s && s.players && s.players[m.id];
-    $('pScore').textContent = p ? fmtN(p.points) + ' pts' : '';
+    $('pScore').textContent = p ? T('pts', { n: fmtN(p.points) }) : '';
     $('pScore').hidden = !p;
     const asking = s && s.phase === 'question' && answeredN !== s.n;
     $('pAsk').hidden = !asking;
@@ -493,17 +512,17 @@ window.onNeblla = (neblla) => {
   }
 
   function waitTexts(s, m, p) {
-    if (!s || neblla.room.phase !== 'running' || s.phase === 'ready') return ['¡Ya estás dentro!', 'Mira la pantalla: el concurso empieza enseguida.'];
-    if (s.phase === 'question' || s.phase === 'closing' || s.phase === 'closed') return answeredN === s.n ? ['Respuesta enviada', 'A ver si aciertas…'] : ['¡Tiempo!', 'Esta te la has perdido.'];
+    if (!s || neblla.room.phase !== 'running' || s.phase === 'ready') return [T('p_in'), T('p_in_sub')];
+    if (s.phase === 'question' || s.phase === 'closing' || s.phase === 'closed') return answeredN === s.n ? [T('p_sent'), T('p_sent_sub')] : [T('p_late'), T('p_late_sub')];
     const l = s.last && s.last[m.id];
     if (s.phase === 'reveal') {
-      if (l && l.ok) return ['¡Correcto! +' + fmtN(l.gained), 'En ' + fmtS(l.ms) + '. ¡Muy rápido!'];
-      if (l && l.ms != null) return ['¡Casi!', 'La buena era: ' + s.q.options[s.right]];
-      return ['No contestaste', 'La buena era: ' + s.q.options[s.right]];
+      if (l && l.ok) return [T('p_ok', { gained: fmtN(l.gained) }), T('p_ok_sub', { time: fmtS(l.ms) })];
+      if (l && l.ms != null) return [T('p_almost'), T('p_was', { answer: s.q.options[s.right] })];
+      return [T('p_none'), T('p_was', { answer: s.q.options[s.right] })];
     }
     const pos = ranked(s).findIndex(x => x.id === m.id);
-    if (s.phase === 'ranking') return pos >= 0 ? ['Vas ' + ordinal(pos), 'con ' + fmtN(p.points) + ' puntos'] : ['Ranking', 'Mira la pantalla.'];
-    if (s.phase === 'end') return pos >= 0 ? ['Has quedado ' + ordinal(pos), fmtN(p.points) + ' puntos. ¡Gracias por jugar!'] : ['¡Fin!', 'Gracias por jugar.'];
+    if (s.phase === 'ranking') return pos >= 0 ? [T('p_rank', { n: fmtI(pos + 1) }), T('p_rank_sub', { points: fmtN(p.points) })] : [T('b_ranking'), T('p_look')];
+    if (s.phase === 'end') return pos >= 0 ? [T('p_end', { n: fmtI(pos + 1) }), T('p_end_sub', { points: fmtN(p.points) })] : [T('p_fin'), T('p_fin_sub')];
     return ['', ''];
   }
 
@@ -515,12 +534,12 @@ window.onNeblla = (neblla) => {
       neblla.message.to('server', { type: 'answered', n });
     } catch (e) {
       answeredN = -1;
-      toast('No llegó tu respuesta: ' + (e.code || e.message));
+      toast(T('err_answer', { err: errOf(e) }));
       renderPlayer();
     }
   }
 
-  neblla.app.on('error', (e) => { if (e.code === 'quota_exceeded') toast('El concurso no puede seguir hoy: se acabó la cuota de la app.'); });
+  neblla.app.on('error', (e) => { if (e.code === 'quota_exceeded') toast(T('err_quota')); });
 
   // ── Al abrir la página ────────────────────────────────────────────
   // Con ?room=<código> (el enlace o el QR), directo a la sala; si no, a la
