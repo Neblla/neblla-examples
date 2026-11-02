@@ -43,7 +43,7 @@ const errText = (err) => {
   return known.includes(code) ? T('err_' + code) : T('err_other', { code: code || err });
 };
 // Los productos se pueden comprar cuando el estudio tiene los pagos activos; si no, ni se abre la ventana de pago.
-const payable = (id) => !id || products.some(p => p.productId === id);
+const payable = (id) => !id || products.some(p => p.productId === id && !p.waiting);   // «waiting»: el producto espera a la cuenta de cobros (se lista, pero no se puede comprar)
 
 function status(text, bad) {
   const s = $('status');
@@ -313,6 +313,8 @@ async function buy(productId, opts) {
 }
 $('buyBono').onclick = () => buy(P_BONO);
 neblla.shop.on('purchase', (e) => {
+  // Al hacer Login el SDK manda las compras de la cuenta (type 'sync', sin productId): no es un pago nuevo.
+  if (e?.type === 'sync' || !e?.productId) { if (current === 'horarios') renderTimetable(); else if (current === 'calendario') renderCalendar(); else if (current === 'mias') renderMine(); return; }
   if (e?.productId === P_BONO) status(T('bono_bought'));
   else if (standingOffer.some(o => o.productId === e?.productId)) status(T('plan_bought'));
   else status(T('payment_received'));
