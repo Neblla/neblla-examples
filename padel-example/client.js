@@ -63,7 +63,11 @@ const ERR = {
 };
 const errText = (err) => {
   const code = err?.code || err?.message;
-  return ERR[code] ? T(ERR[code]) : T('err_other', { code: code || err });
+  if (ERR[code]) return T(ERR[code]);
+  // The SDK's refusals (product_waiting, product_not_published…) carry a sentence in the page's language.
+  const sdk = err && typeof err.message === 'string' ? err.message : '';
+  if (sdk && sdk !== code && !/^[a-z0-9]+(_[a-z0-9]+)+$/.test(sdk)) return sdk;
+  return T('err_other', { code: code || err });
 };
 
 function status(text, bad) {
